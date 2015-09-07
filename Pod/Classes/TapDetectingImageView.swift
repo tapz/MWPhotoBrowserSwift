@@ -9,29 +9,29 @@
 
 import Foundation
 
-class TapDetectingImageView: UIImageView {
-    weak var tapDelegate: TapDetectingImageViewDelegate?
+public class TapDetectingImageView: UIImageView {
+    public weak var tapDelegate: TapDetectingImageViewDelegate?
 
-    override init(frame: CGRect) {
+    public override init(frame: CGRect) {
         super.init(frame: frame)
         userInteractionEnabled = true
     }
 
-    override init(image: UIImage) {
+    public override init(image: UIImage) {
         super.init(image: image)
         userInteractionEnabled = true
     }
 
-    override init(image: UIImage, highlightedImage: UIImage?) {
+    public override init(image: UIImage, highlightedImage: UIImage?) {
         super.init(image: image, highlightedImage: highlightedImage)
         userInteractionEnabled = true
     }
 
-    required init(coder aDecoder: NSCoder) {
+    public required init(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
     }
 
-    override func touchesEnded(touches: Set<NSObject>, withEvent event: UIEvent) {
+    public override func touchesEnded(touches: Set<NSObject>, withEvent event: UIEvent) {
         if let touch = touches.first as? UITouch  {
             let tapCount = touch.tapCount
         
@@ -48,26 +48,26 @@ class TapDetectingImageView: UIImageView {
         }
     }
 
-    func handleSingleTap(touch: UITouch) {
+    private func handleSingleTap(touch: UITouch) {
         if let td = tapDelegate {
             td.singleTapDetectedInImageView(self, touch: touch)
         }
     }
 
-    func handleDoubleTap(touch: UITouch) {
+    private func handleDoubleTap(touch: UITouch) {
         if let td = tapDelegate {
             td.doubleTapDetectedInImageView(self, touch: touch)
         }
     }
 
-    func handleTripleTap(touch: UITouch) {
+    private func handleTripleTap(touch: UITouch) {
         if let td = tapDelegate {
             td.tripleTapDetectedInImageView(self, touch: touch)
         }
     }
 }
 
-protocol TapDetectingImageViewDelegate: class {
+public protocol TapDetectingImageViewDelegate: class {
     func singleTapDetectedInImageView(view: UIImageView, touch: UITouch)
     func doubleTapDetectedInImageView(view: UIImageView, touch: UITouch)
     func tripleTapDetectedInImageView(view: UIImageView, touch: UITouch)

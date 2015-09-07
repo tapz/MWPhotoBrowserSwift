@@ -9,24 +9,24 @@
 
 import Foundation
 
-class TapDetectingView: UIView {
-    weak var tapDelegate: TapDetectingViewDelegate?
+public class TapDetectingView: UIView {
+    public weak var tapDelegate: TapDetectingViewDelegate?
     
-    init() {
+    public init() {
         super.init(frame: CGRectZero)
         userInteractionEnabled = true
     }
 
-    override init(frame: CGRect) {
+    public override init(frame: CGRect) {
         super.init(frame: frame)
         userInteractionEnabled = true
     }
     
-    required init(coder aDecoder: NSCoder) {
+    public required init(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
     }
 
-    override func touchesEnded(touches: Set<NSObject>, withEvent event: UIEvent) {
+    public override func touchesEnded(touches: Set<NSObject>, withEvent event: UIEvent) {
         if let touch = touches.first as? UITouch  {
             let tapCount = touch.tapCount
         
@@ -43,26 +43,26 @@ class TapDetectingView: UIView {
         }
     }
 
-    func handleSingleTap(touch: UITouch) {
+    private func handleSingleTap(touch: UITouch) {
         if let td = tapDelegate {
             td.singleTapDetectedInView(self, touch: touch)
         }
     }
 
-    func handleDoubleTap(touch: UITouch) {
+    private func handleDoubleTap(touch: UITouch) {
         if let td = tapDelegate {
             td.doubleTapDetectedInView(self, touch: touch)
         }
     }
 
-    func handleTripleTap(touch: UITouch) {
+    private func handleTripleTap(touch: UITouch) {
         if let td = tapDelegate {
             td.tripleTapDetectedInView(self, touch: touch)
         }
     }
 }
 
-protocol TapDetectingViewDelegate: class {
+public protocol TapDetectingViewDelegate: class {
     func singleTapDetectedInView(view: UIView, touch: UITouch)
     func doubleTapDetectedInView(view: UIView, touch: UITouch)
     func tripleTapDetectedInView(view: UIView, touch: UITouch)

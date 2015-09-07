@@ -1,10 +1,14 @@
 Pod::Spec.new do |s|
 
   s.name = 'MWPhotoBrowserSwift'
-  s.version = '3.0.0'
+  s.version = '0.1.0'
   s.license = 'MIT'
-  s.summary = 'A simple iOS photo and video browser with optional grid view, captions and selections.'
+  s.summary = 'A simple iOS photo and video browser with optional grid view, captions and selections. Swift version.'
   s.description = <<-DESCRIPTION
+                  This is a Swift port of the original Objective-C work of Michael Waterfall.
+
+				  https://github.com/mwaterfall/MWPhotoBrowser
+				  
                   MWPhotoBrowserSwift can display one or more images or videos by providing either UIImage
                   objects, PHAsset objects, or URLs to library assets, web images/videos or local files.
                   The photo browser handles the downloading and caching of photos from the web seamlessly.
@@ -25,7 +29,7 @@ Pod::Spec.new do |s|
 
   s.source = {
     :git => 'https://github.com/tapz/MWPhotoBrowserSwift.git',
-    :tag => '3.0.0'
+    :tag => '0.1.0'
   }
   s.platform = :ios, '8.0'
   s.source_files = 'Pod/Classes/**/*'

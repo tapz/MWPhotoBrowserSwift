@@ -9,20 +9,20 @@
 
 import UIKit
 
-class CaptionView: UIToolbar {
+public class CaptionView: UIToolbar {
     private var photo: Photo?
     private var label = UILabel()
-    let labelPadding = CGFloat(10.0)
+    public let labelPadding = CGFloat(10.0)
 
     init(photo: Photo?) {
         super.init(frame: CGRectMake(0, 0, 320, 44)) // Random initial frame
         
         userInteractionEnabled = false
         self.photo = photo
-        barStyle = .BlackTranslucent
+        barStyle = .Default
         tintColor = nil
         barTintColor = nil
-        barStyle = .BlackTranslucent;
+        barStyle = .Default;
         setBackgroundImage(nil, forToolbarPosition: .Any, barMetrics: .Default)
         autoresizingMask =
             .FlexibleWidth |
@@ -33,11 +33,11 @@ class CaptionView: UIToolbar {
         setupCaption()
     }
 
-    required init(coder aDecoder: NSCoder) {
+    public required init(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
     }
     
-    override func sizeThatFits(size: CGSize) -> CGSize {
+    public override func sizeThatFits(size: CGSize) -> CGSize {
         var maxHeight = CGFloat(9999.0)
         if label.numberOfLines > 0 {
             maxHeight = label.font.leading * CGFloat(label.numberOfLines)
@@ -59,7 +59,7 @@ class CaptionView: UIToolbar {
         return CGSizeMake(size.width, textSize.height + labelPadding * 2.0)
     }
 
-    func setupCaption() {
+    private func setupCaption() {
         label = UILabel(frame: CGRectIntegral(CGRectMake(
             labelPadding,
             0.0,

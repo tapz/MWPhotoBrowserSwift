@@ -9,7 +9,7 @@
 
 import Foundation
 
-extension UIImage {
+public extension UIImage {
     class func imageForResourcePath(path: String, ofType: String, inBundle: NSBundle) -> UIImage? {
         if let p = inBundle.pathForResource(path, ofType: ofType) {
             return UIImage(contentsOfFile: p)

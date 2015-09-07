@@ -8,7 +8,7 @@
 
 import UIKit
 
-class GridViewController: UICollectionViewController {
+public class GridViewController: UICollectionViewController {
     weak var browser: PhotoBrowser?
     var selectionMode = false
     var initialContentOffset = CGPointMake(0.0, CGFloat.max)
@@ -54,23 +54,23 @@ class GridViewController: UICollectionViewController {
         }
     }
 
-    required init(coder aDecoder: NSCoder) {
+    public required init(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
     }
 
     //MARK: - View
 
-    override func viewDidLoad() {
+    public override func viewDidLoad() {
         super.viewDidLoad()
         
         if let cv = collectionView {
             cv.registerClass(GridCell.self, forCellWithReuseIdentifier: "GridCell")
             cv.alwaysBounceVertical = true
-            cv.backgroundColor = UIColor.blackColor()
+            cv.backgroundColor = UIColor.whiteColor()
         }
     }
 
-    override func viewWillDisappear(animated: Bool) {
+    public override func viewWillDisappear(animated: Bool) {
         // Cancel outstanding loading
         if let cv = collectionView {
             for cell in cv.visibleCells() {
@@ -85,12 +85,12 @@ class GridViewController: UICollectionViewController {
         super.viewWillDisappear(animated)
     }
 
-    override func viewWillLayoutSubviews() {
+    public override func viewWillLayoutSubviews() {
         super.viewWillLayoutSubviews()
         performLayout()
     }
 
-    override func viewDidLayoutSubviews() {
+    public override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
     }
 
@@ -135,7 +135,7 @@ class GridViewController: UICollectionViewController {
         }
     }
 
-    override func willAnimateRotationToInterfaceOrientation(toInterfaceOrientation: UIInterfaceOrientation, duration: NSTimeInterval) {
+    public override func willAnimateRotationToInterfaceOrientation(toInterfaceOrientation: UIInterfaceOrientation, duration: NSTimeInterval) {
         if let cv = collectionView {
             cv.reloadData()
         }
@@ -168,10 +168,15 @@ class GridViewController: UICollectionViewController {
     
         return gutterL
     }
+    
+    public override func viewWillTransitionToSize(size: CGSize, withTransitionCoordinator coordinator: UIViewControllerTransitionCoordinator) {
+        // TODO: change margin and columns
+        super.viewWillTransitionToSize(size, withTransitionCoordinator: coordinator)
+    }
 
     //MARK: - Collection View
 
-    override func collectionView(view: UICollectionView, numberOfItemsInSection section: Int) -> NSInteger {
+    public override func collectionView(view: UICollectionView, numberOfItemsInSection section: Int) -> NSInteger {
         if let b = browser {
             return b.numberOfPhotos
         }
@@ -179,7 +184,7 @@ class GridViewController: UICollectionViewController {
         return 0
     }
 
-    override func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
+    public override func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCellWithReuseIdentifier("GridCell", forIndexPath: indexPath) as! GridCell
         
         if let b = browser {
@@ -202,14 +207,14 @@ class GridViewController: UICollectionViewController {
         return cell
     }
 
-    override func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
+    public override func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
         if let b = browser {
             b.currentPhotoIndex = indexPath.row
             b.hideGrid()
         }
     }
 
-    override func collectionView(collectionView: UICollectionView, didEndDisplayingCell cell: UICollectionViewCell, forItemAtIndexPath indexPath: NSIndexPath) {
+    public override func collectionView(collectionView: UICollectionView, didEndDisplayingCell cell: UICollectionViewCell, forItemAtIndexPath indexPath: NSIndexPath) {
         if let gridCell = cell as? GridCell {
             if let gcp = gridCell.photo {
                 gcp.cancelAnyLoading()

@@ -9,7 +9,7 @@
 import UIKit
 import DACircularProgress
 
-class GridCell: UICollectionViewCell {
+public class GridCell: UICollectionViewCell {
     let videoIndicatorPadding = CGFloat(10.0)
     
     var index = 0
@@ -39,7 +39,7 @@ class GridCell: UICollectionViewCell {
         // Video Image
         videoIndicator.hidden = false
         let videoIndicatorImage = UIImage.imageForResourcePath(
-            "MWPhotoBrowser.bundle/VideoOverlay",
+            "MWPhotoBrowserSwift.bundle/VideoOverlay",
             ofType: "png",
             inBundle: NSBundle(forClass: GridCell.self))!
             
@@ -59,13 +59,13 @@ class GridCell: UICollectionViewCell {
 
         selectedButton.setImage(
             UIImage.imageForResourcePath(
-                "MWPhotoBrowser.bundle/ImageSelectedSmallOff",
+                "MWPhotoBrowserSwift.bundle/ImageSelectedSmallOff",
                 ofType: "png",
                 inBundle: NSBundle(forClass: GridCell.self)),
             forState: .Normal)
 
         selectedButton.setImage(UIImage.imageForResourcePath(
-                "MWPhotoBrowser.bundle/ImageSelectedSmallOn",
+                "MWPhotoBrowserSwift.bundle/ImageSelectedSmallOn",
                 ofType: "png",
                 inBundle: NSBundle(forClass: GridCell.self)),
             forState: .Selected)
@@ -90,12 +90,12 @@ class GridCell: UICollectionViewCell {
         
         NSNotificationCenter.defaultCenter().addObserver(
             self,
-            selector: Selector("handleMWPhotoLoadingDidEndNotification:"),
+            selector: Selector("handlePhotoLoadingDidEndNotification:"),
             name: MWPHOTO_LOADING_DID_END_NOTIFICATION,
             object: nil)
     }
 
-    required init(coder aDecoder: NSCoder) {
+    public required init(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
     }
 
@@ -126,7 +126,7 @@ class GridCell: UICollectionViewCell {
 
     //MARK: - View
 
-    override func layoutSubviews() {
+    public override func layoutSubviews() {
         super.layoutSubviews()
         
         imageView.frame = bounds
@@ -146,7 +146,7 @@ class GridCell: UICollectionViewCell {
 
     //MARK: - Cell
 
-    override func prepareForReuse() {
+    public override func prepareForReuse() {
         photo = nil
         mwGridController = nil
         imageView.image = nil
@@ -195,7 +195,7 @@ class GridCell: UICollectionViewCell {
 
     //MARK: - Selection
 
-    override var selected: Bool {
+    public override var selected: Bool {
         set(sel) {
             super.selected = sel
             selectedButton.selected = sel
@@ -218,42 +218,42 @@ class GridCell: UICollectionViewCell {
 
     //MARK: - Touches
 
-    override func touchesBegan(touches: Set<NSObject>, withEvent event: UIEvent) {
+    public override func touchesBegan(touches: Set<NSObject>, withEvent event: UIEvent) {
         imageView.alpha = 0.6
         super.touchesBegan(touches, withEvent: event)
     }
 
-    override func touchesEnded(touches: Set<NSObject>, withEvent event: UIEvent) {
+    public override func touchesEnded(touches: Set<NSObject>, withEvent event: UIEvent) {
         imageView.alpha = 1
         super.touchesEnded(touches, withEvent: event)
     }
 
-    override func touchesCancelled(touches: Set<NSObject>, withEvent event: UIEvent) {
+    public override func touchesCancelled(touches: Set<NSObject>, withEvent event: UIEvent) {
         imageView.alpha = 1
         super.touchesCancelled(touches, withEvent: event)
     }
 
     //MARK: - Indicators
 
-    func hideLoadingIndicator() {
+    private func hideLoadingIndicator() {
         loadingIndicator.hidden = true
     }
 
-    func showLoadingIndicator() {
+    private func showLoadingIndicator() {
         loadingIndicator.progress = 0
         loadingIndicator.hidden = false
         
         hideImageFailure()
     }
 
-    func showImageFailure() {
+    private func showImageFailure() {
         // Only show if image is not empty
         if let p = photo {
             if p.emptyImage {
                 if nil == loadingError {
                     let error = UIImageView()
                     error.image = UIImage.imageForResourcePath(
-                        "MWPhotoBrowser.bundle/ImageError",
+                        "MWPhotoBrowserSwift.bundle/ImageError",
                         ofType: "png",
                         inBundle: NSBundle(forClass: GridCell.self))
             
@@ -278,7 +278,7 @@ class GridCell: UICollectionViewCell {
         imageView.image = nil
     }
 
-    func hideImageFailure() {
+    private func hideImageFailure() {
         if loadingError != nil {
             loadingError!.removeFromSuperview()
             loadingError = nil
@@ -287,7 +287,7 @@ class GridCell: UICollectionViewCell {
 
     //MARK: - Notifications
 
-    func setProgressFromNotification(notification: NSNotification) {
+    public func setProgressFromNotification(notification: NSNotification) {
         if let dict = notification.object as? [String : AnyObject?] {
             if let photoWithProgress = dict["photo"] as? Photo {
                 if let mwp = mwPhoto {
@@ -306,7 +306,7 @@ class GridCell: UICollectionViewCell {
         }
     }
 
-    func handleMWPhotoLoadingDidEndNotification(notification: NSNotification) {
+    public func handlePhotoLoadingDidEndNotification(notification: NSNotification) {
         if let p = notification.object as? Photo {
             if let mwp = mwPhoto {
                 if photosEqual(p, mwp) {

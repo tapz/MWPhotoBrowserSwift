@@ -15,11 +15,11 @@ import Photos
 
 var PHInvalidImageRequestID = PHImageRequestID(0)
 
-class MWPhoto: Photo {
-    var caption = " "
-    var emptyImage = true
-    var isVideo = false
-    var underlyingImage: UIImage?
+public class MWPhoto: Photo {
+    public var caption = " "
+    public var emptyImage = true
+    public var isVideo = false
+    public var underlyingImage: UIImage?
 
     private let uuid = NSUUID().UUIDString
     private var image: UIImage?
@@ -33,19 +33,19 @@ class MWPhoto: Photo {
     
     //MARK: - Init
 
-    init() {}
+    public init() {}
 
-    convenience init(image: UIImage) {
+    public convenience init(image: UIImage) {
         self.init()
         self.image = image
     }
 
-    convenience init(url: NSURL) {
+    public convenience init(url: NSURL) {
         self.init()
         self.photoURL = url
     }
 
-    convenience init(asset: PHAsset, targetSize: CGSize) {
+    public convenience init(asset: PHAsset, targetSize: CGSize) {
         self.init()
         
         self.asset = asset
@@ -53,7 +53,7 @@ class MWPhoto: Photo {
         isVideo = asset.mediaType == PHAssetMediaType.Video
     }
 
-    convenience init(videoURL: NSURL) {
+    public convenience init(videoURL: NSURL) {
         self.init()
     
         self.videoURL = videoURL
@@ -65,12 +65,12 @@ class MWPhoto: Photo {
 
     private var videoURL: NSURL?
 
-    func setVideoURL(url: NSURL?) {
+    public func setVideoURL(url: NSURL?) {
         videoURL = url
         isVideo = true
     }
 
-    func getVideoURL(completion: (NSURL?) -> ()) {
+    public func getVideoURL(completion: (NSURL?) -> ()) {
         if let vurl = videoURL {
             completion(vurl)
         }
@@ -99,7 +99,7 @@ class MWPhoto: Photo {
 
     //MARK: - Photo Protocol Methods
 
-    func loadUnderlyingImageAndNotify() {
+    public func loadUnderlyingImageAndNotify() {
         assert(NSThread.currentThread().isMainThread, "This method must be called on the main thread.")
         
         if loadingInProgress {
@@ -124,7 +124,7 @@ class MWPhoto: Photo {
     }
 
     // Set the underlyingImage
-    func performLoadUnderlyingImageAndNotify() {
+    public func performLoadUnderlyingImageAndNotify() {
         // Get underlying image
         if let img = image {
             // We have UIImage!
@@ -160,7 +160,7 @@ class MWPhoto: Photo {
     }
 
     // Load from local file
-    func performLoadUnderlyingImageAndNotifyWithWebURL(url: NSURL) {
+    private func performLoadUnderlyingImageAndNotifyWithWebURL(url: NSURL) {
         //try {
             let manager = SDWebImageManager.sharedManager()
             webImageOperation = manager.downloadImageWithURL(
@@ -197,7 +197,7 @@ class MWPhoto: Photo {
     }
 
     // Load from local file
-    func performLoadUnderlyingImageAndNotifyWithLocalFileURL(url: NSURL) {
+    private func performLoadUnderlyingImageAndNotifyWithLocalFileURL(url: NSURL) {
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)) {
             //try {
             if let path = url.path {
@@ -216,7 +216,7 @@ class MWPhoto: Photo {
     }
 
     // Load from asset library async
-    func performLoadUnderlyingImageAndNotifyWithAssetsLibraryURL(url: NSURL) {
+    private func performLoadUnderlyingImageAndNotifyWithAssetsLibraryURL(url: NSURL) {
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)) {
             //try {
                 let assetslibrary = ALAssetsLibrary()
@@ -247,7 +247,7 @@ class MWPhoto: Photo {
     }
 
     // Load from photos library
-    func performLoadUnderlyingImageAndNotifyWithAsset(asset: PHAsset, targetSize: CGSize) {
+    private func performLoadUnderlyingImageAndNotifyWithAsset(asset: PHAsset, targetSize: CGSize) {
         let imageManager = PHImageManager.defaultManager()
         
         let options = PHImageRequestOptions()
@@ -278,12 +278,12 @@ class MWPhoto: Photo {
     }
 
     // Release if we can get it again from path or url
-    func unloadUnderlyingImage() {
+    public func unloadUnderlyingImage() {
         loadingInProgress = false
         underlyingImage = nil
     }
 
-    func imageLoadingComplete() {
+    private func imageLoadingComplete() {
         assert(NSThread.currentThread().isMainThread, "This method must be called on the main thread.")
         
         // Complete so notify
@@ -295,13 +295,13 @@ class MWPhoto: Photo {
         }
     }
 
-    func postCompleteNotification() {
+    private func postCompleteNotification() {
         NSNotificationCenter.defaultCenter().postNotificationName(
             MWPHOTO_LOADING_DID_END_NOTIFICATION,
             object: self)
     }
 
-    func cancelAnyLoading() {
+    public func cancelAnyLoading() {
         if let wo = webImageOperation {
             wo.cancel()
             loadingInProgress = false
@@ -313,7 +313,7 @@ class MWPhoto: Photo {
         }
     }
     
-    func equals(photo: Photo) -> Bool {
+    public func equals(photo: Photo) -> Bool {
         if let p = photo as? MWPhoto {
             return uuid == p.uuid
         }

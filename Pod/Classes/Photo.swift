@@ -12,7 +12,7 @@ import Foundation
 let MWPHOTO_LOADING_DID_END_NOTIFICATION  = "MWPHOTO_LOADING_DID_END_NOTIFICATION"
 let MWPHOTO_PROGRESS_NOTIFICATION  = "MWPHOTO_PROGRESS_NOTIFICATION"
 
-protocol Photo: class {
+public protocol Photo: class {
     var underlyingImage: UIImage? { get }
 
     // Called when the browser has determined the underlying images is not
