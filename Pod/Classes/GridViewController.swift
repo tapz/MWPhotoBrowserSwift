@@ -13,45 +13,8 @@ public class GridViewController: UICollectionViewController {
     var selectionMode = false
     var initialContentOffset = CGPointMake(0.0, CGFloat.max)
     
-    private var marginP = CGFloat(0.0)
-    private var gutterP = CGFloat(1.0)
-    private var marginL = CGFloat(0.0)
-    private var gutterL = CGFloat(1.0)
-    private var columnsP = CGFloat(3.0)
-    private var columnsL = CGFloat(4.0)
-    
     init() {
         super.init(collectionViewLayout: UICollectionViewFlowLayout())
-        
-        // For pixel perfection...
-        if UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiom.Pad {
-            // iPad
-            columnsP = 6.0
-            columnsL = 8.0
-            marginP = 1.0
-            gutterP = 2.0
-            marginL = 1.0
-            gutterL = 2.0
-        }
-        else
-        if UIScreen.mainScreen().bounds.size.height == 480 {
-            // iPhone 3.5 inch
-            columnsP = 3.0
-            columnsL = 4.0
-            marginP = 0.0
-            gutterP = 1.0
-            marginL = 1.0
-            gutterL = 2.0
-        }
-        else {
-            // iPhone 4 inch
-            columnsP = 3.0
-            columnsL = 5.0
-            marginP = 0.0
-            gutterP = 1.0
-            marginL = 0.0
-            gutterL = 2.0
-        }
     }
 
     public required init(coder aDecoder: NSCoder) {
@@ -130,47 +93,29 @@ public class GridViewController: UICollectionViewController {
             let navBar = navi.navigationBar
             
             if let cv = collectionView {
-                cv.contentInset = UIEdgeInsetsMake(navBar.frame.origin.y + navBar.frame.size.height + gutter, 0.0, 0.0, 0.0)
+                cv.contentInset = UIEdgeInsetsMake(
+                    navBar.frame.origin.y + navBar.frame.size.height + gutter,
+                    0.0, 0.0, 0.0)
             }
         }
-    }
-
-    public override func willAnimateRotationToInterfaceOrientation(toInterfaceOrientation: UIInterfaceOrientation, duration: NSTimeInterval) {
-        if let cv = collectionView {
-            cv.reloadData()
-        }
-        
-        performLayout() // needed for iOS 5 & 6
     }
 
     //MARK: - Layout
 
     private var columns: CGFloat {
-        if UIInterfaceOrientationIsPortrait(interfaceOrientation) {
-            return columnsP
-        }
-        
-        return columnsL
+        return floorcgf(view.bounds.width / 93.0)
     }
 
-    private var margin: CGFloat {
-        if UIInterfaceOrientationIsPortrait(self.interfaceOrientation) {
-            return marginP
-        }
-    
-        return marginL
-    }
-
-    private var gutter: CGFloat {
-        if UIInterfaceOrientationIsPortrait(self.interfaceOrientation) {
-            return gutterP
-        }
-    
-        return gutterL
-    }
+    private var margin = CGFloat(5.0)
+    private var gutter = CGFloat(5.0)
     
     public override func viewWillTransitionToSize(size: CGSize, withTransitionCoordinator coordinator: UIViewControllerTransitionCoordinator) {
-        // TODO: change margin and columns
+        coordinator.animateAlongsideTransition(nil) { _ in
+            if let cv = self.collectionView {
+                cv.reloadData()
+            }
+        }
+        
         super.viewWillTransitionToSize(size, withTransitionCoordinator: coordinator)
     }
 

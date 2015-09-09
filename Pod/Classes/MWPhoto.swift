@@ -16,7 +16,7 @@ import Photos
 var PHInvalidImageRequestID = PHImageRequestID(0)
 
 public class MWPhoto: Photo {
-    public var caption = " "
+    public var caption = ""
     public var emptyImage = true
     public var isVideo = false
     public var underlyingImage: UIImage?

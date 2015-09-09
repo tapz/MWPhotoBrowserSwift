@@ -13,6 +13,10 @@ import QuartzCore
 import SDWebImage
 import MBProgressHUD
 
+func floorcgf(x: CGFloat) -> CGFloat {
+    return CGFloat(floorf(Float(x)))
+}
+
 public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheetDelegate {
     private let padding = CGFloat(10.0)
 
@@ -95,6 +99,9 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
     public var toolbarTintColor = UIColor.blackColor()
     public var toolbarBarTintColor = UIColor.whiteColor()
     public var toolbarBackgroundColor = UIColor.whiteColor()
+    
+    public var captionAlpha = CGFloat(0.5)
+    public var toolbarAlpha = CGFloat(0.8)
 
     // Customise image selection icons as they are the only icons with a colour tint
     // Icon should be located in the app's main bundle
@@ -154,7 +161,11 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
         delayToHideElements = 5.0
         currentGridContentOffset = CGPointMake(0, CGFloat.max)
         didSavePreviousStateOfNavBar = false
-        self.automaticallyAdjustsScrollViewInsets = false
+        automaticallyAdjustsScrollViewInsets = false
+        
+        if let navi = self.navigationController {
+            navi.view.backgroundColor = UIColor.whiteColor()
+        }
         
         // Listen for MWPhoto falsetifications
         NSNotificationCenter.defaultCenter().addObserver(
@@ -244,10 +255,11 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
         view.addSubview(pagingScrollView)
         
         // Toolbar
-        toolbar = UIToolbar(frame: frameForToolbarAtOrientation(interfaceOrientation))
+        toolbar = UIToolbar(frame: frameForToolbar)
         toolbar.tintColor = toolbarTintColor
         toolbar.barTintColor = toolbarBarTintColor
         toolbar.backgroundColor = toolbarBackgroundColor
+        toolbar.alpha = 0.8
         toolbar.setBackgroundImage(nil, forToolbarPosition: .Any, barMetrics: .Default)
         toolbar.setBackgroundImage(nil, forToolbarPosition: .Any, barMetrics: .Compact)
         toolbar.barStyle = .Default
@@ -300,6 +312,14 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
         // Super
         super.viewDidLoad()
     }
+    
+    public override func viewWillTransitionToSize(size: CGSize, withTransitionCoordinator coordinator: UIViewControllerTransitionCoordinator) {
+        coordinator.animateAlongsideTransition(nil) { _ in
+            self.toolbar.frame = self.frameForToolbar
+        }
+        
+        super.viewWillTransitionToSize(size, withTransitionCoordinator: coordinator)
+    }
 
     func performLayout() {
         // Setup
@@ -311,46 +331,50 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
         recycledPages.removeAll()
         
         // Navigation buttons
-        if navigationController!.viewControllers[0] as! NSObject == self {
-            // We're first on stack so show done button
-            doneButton = UIBarButtonItem(
-                title: NSLocalizedString("Done", comment: ""),
-                style: UIBarButtonItemStyle.Plain,
-                target: self,
-                action: Selector("doneButtonPressed:"))
-            
-            // Set appearance
-            if let done = doneButton {
-                done.setBackgroundImage(nil, forState: .Normal, barMetrics: .Default)
-                done.setBackgroundImage(nil, forState: .Normal, barMetrics: .Compact)
-                done.setBackgroundImage(nil, forState: .Highlighted, barMetrics: .Default)
-                done.setBackgroundImage(nil, forState: .Highlighted, barMetrics: .Compact)
-                done.setTitleTextAttributes([String : AnyObject](), forState: .Normal)
-                done.setTitleTextAttributes([String : AnyObject](), forState: .Highlighted)
+        if let navi = navigationController {
+            if navi.viewControllers.count > 0 &&
+               navi.viewControllers[0] as? NSObject == self
+            {
+                // We're first on stack so show done button
+                doneButton = UIBarButtonItem(
+                    title: NSLocalizedString("Done", comment: ""),
+                    style: UIBarButtonItemStyle.Plain,
+                    target: self,
+                    action: Selector("doneButtonPressed:"))
                 
-                self.navigationItem.rightBarButtonItem = done
+                // Set appearance
+                if let done = doneButton {
+                    done.setBackgroundImage(nil, forState: .Normal, barMetrics: .Default)
+                    done.setBackgroundImage(nil, forState: .Normal, barMetrics: .Compact)
+                    done.setBackgroundImage(nil, forState: .Highlighted, barMetrics: .Default)
+                    done.setBackgroundImage(nil, forState: .Highlighted, barMetrics: .Compact)
+                    done.setTitleTextAttributes([String : AnyObject](), forState: .Normal)
+                    done.setTitleTextAttributes([String : AnyObject](), forState: .Highlighted)
+                    
+                    self.navigationItem.rightBarButtonItem = done
+                }
             }
-        }
-        else {
-            // We're not first so show back button
-            if let navi = navigationController {
-                if let previousViewController = navi.viewControllers[navi.viewControllers.count - 2] as? UINavigationController {
-                    let backButtonTitle = previousViewController.navigationItem.backBarButtonItem != nil ?
-                        previousViewController.navigationItem.backBarButtonItem!.title :
-                        previousViewController.title
-                    
-                    let newBackButton = UIBarButtonItem(title: backButtonTitle, style: .Plain, target: nil, action: nil)
-                    
-                    // Appearance
-                    newBackButton.setBackButtonBackgroundImage(nil, forState: .Normal, barMetrics: .Default)
-                    newBackButton.setBackButtonBackgroundImage(nil, forState: .Normal, barMetrics: .Compact)
-                    newBackButton.setBackButtonBackgroundImage(nil, forState: .Highlighted, barMetrics: .Default)
-                    newBackButton.setBackButtonBackgroundImage(nil, forState: .Highlighted, barMetrics: .Compact)
-                    newBackButton.setTitleTextAttributes([String : AnyObject](), forState: .Normal)
-                    newBackButton.setTitleTextAttributes([String : AnyObject](), forState: .Highlighted)
-                    
-                    previousViewControllerBackButton = previousViewController.navigationItem.backBarButtonItem // remember previous
-                    previousViewController.navigationItem.backBarButtonItem = newBackButton
+            else {
+                // We're not first so show back button
+                if let navi = navigationController {
+                    if let previousViewController = navi.viewControllers[navi.viewControllers.count - 2] as? UINavigationController {
+                        let backButtonTitle = previousViewController.navigationItem.backBarButtonItem != nil ?
+                            previousViewController.navigationItem.backBarButtonItem!.title :
+                            previousViewController.title
+                        
+                        let newBackButton = UIBarButtonItem(title: backButtonTitle, style: .Plain, target: nil, action: nil)
+                        
+                        // Appearance
+                        newBackButton.setBackButtonBackgroundImage(nil, forState: .Normal, barMetrics: .Default)
+                        newBackButton.setBackButtonBackgroundImage(nil, forState: .Normal, barMetrics: .Compact)
+                        newBackButton.setBackButtonBackgroundImage(nil, forState: .Highlighted, barMetrics: .Default)
+                        newBackButton.setBackButtonBackgroundImage(nil, forState: .Highlighted, barMetrics: .Compact)
+                        newBackButton.setTitleTextAttributes([String : AnyObject](), forState: .Normal)
+                        newBackButton.setTitleTextAttributes([String : AnyObject](), forState: .Highlighted)
+                        
+                        previousViewControllerBackButton = previousViewController.navigationItem.backBarButtonItem // remember previous
+                        previousViewController.navigationItem.backBarButtonItem = newBackButton
+                    }
                 }
             }
         }
@@ -636,7 +660,7 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
         performingLayout = true
         
         // Toolbar
-        toolbar.frame = frameForToolbarAtOrientation(self.interfaceOrientation)
+        toolbar.frame = frameForToolbar
         
         // Remember index
         let indexPriorToLayout = currentPageIndex
@@ -839,18 +863,25 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
     }
 
     func captionViewForPhotoAtIndex(index: Int) -> CaptionView? {
+        var captionView: CaptionView?
+        
         if let d = delegate {
-            var captionView = d.captionViewForPhotoAtIndex(index, photoBrowser: self)
+            captionView = d.captionViewForPhotoAtIndex(index, photoBrowser: self)
             
             if nil == captionView {
-                captionView = CaptionView(photo: photoAtIndex(index))
+                if let p = photoAtIndex(index) {
+                    if count(p.caption) > 0 {
+                        captionView = CaptionView(photo: p)
+                    }
+                }
             }
-            
-            captionView!.alpha = areControlsHidden ? 0 : 1 // Initial alpha
-            return captionView!
         }
         
-        return nil
+        if let cv = captionView {
+            cv.alpha = areControlsHidden ? 0.0 : captionAlpha // Initial alpha
+        }
+        
+        return captionView
     }
 
     func photoIsSelectedAtIndex(index: Int) -> Bool {
@@ -1118,6 +1149,7 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
         page.frame = frameForPageAtIndex(index)
         page.index = index
         page.photo = photoAtIndex(index)
+        page.backgroundColor = areControlsHidden ? UIColor.blackColor() : UIColor.whiteColor()
     }
 
     var dequeueRecycledPage: ZoomingScrollView? {
@@ -1152,7 +1184,7 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
                         photo.unloadUnderlyingImage()
                         photos[i] = nil
                         
-                        //MWLog(@"Released underlying image at index %lu", (unsigned long)i)
+                        //MWLog.log("Released underlying image at index \(i)")
                     }
                 }
             }
@@ -1166,7 +1198,7 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
                         photo.unloadUnderlyingImage()
                         photos[i] = nil
                     
-                        //MWLog(@"Released underlying image at index %lu", (unsigned long)i)
+                        //MWLog.log("Released underlying image at index \(i)")
                     }
                 }
             }
@@ -1198,7 +1230,7 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
     //MARK: - Frame Calculations
 
     var frameForPagingScrollView: CGRect {
-        var frame = self.view.bounds// UIScreen mainScreen] bounds]
+        var frame = view.bounds// UIScreen.mainScreen().bounds
         frame.origin.x -= padding
         frame.size.width += (2.0 * padding)
         return CGRectIntegral(frame)
@@ -1228,16 +1260,14 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
         return CGPointMake(newOffset, 0)
     }
 
-    func frameForToolbarAtOrientation(orientation: UIInterfaceOrientation) -> CGRect {
+    var frameForToolbar: CGRect {
         var height = CGFloat(44.0)
         
-        if UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiom.Phone &&
-            UIInterfaceOrientationIsLandscape(orientation)
-        {
+        if view.bounds.height < 768.0 && view.bounds.height < view.bounds.width {
             height = 32.0
         }
         
-        return CGRectIntegral(CGRectMake(0.0, self.view.bounds.size.height - height, self.view.bounds.size.width, height))
+        return CGRectIntegral(CGRectMake(0.0, view.bounds.size.height - height, view.bounds.size.width, height))
     }
 
     func frameForCaptionView(captionView: CaptionView?, index: Int) -> CGRect {
@@ -1585,11 +1615,8 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
             gc.browser = self
             gc.selectionMode = displaySelectionButtons
             gc.view.frame = view.bounds
+            gc.view.frame = CGRectOffset(gc.view.frame, 0, (startOnGrid ? -1 : 1) * view.bounds.size.height)
             
-            if let gc = gridController {
-                gc.view.frame = CGRectOffset(gc.view.frame, 0, (startOnGrid ? -1 : 1) * view.bounds.size.height)
-            }
-        
             // Stop specific layout being triggered
             skipNextPagingScrollViewPositioning = true
             
@@ -1620,6 +1647,7 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
                 animated ? 0.3 : 0,
                 animations: {
                     gc.view.frame = self.view.bounds
+                    
                     let pagingFrame = self.frameForPagingScrollView
                     self.pagingScrollView.frame = CGRectOffset(
                         pagingFrame,
@@ -1718,7 +1746,7 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
         // Pre-appear animation positions for sliding
         if areControlsHidden && !hidden && animated {
             // Toolbar
-            toolbar.frame = CGRectOffset(frameForToolbarAtOrientation(interfaceOrientation), 0, animatonOffset)
+            toolbar.frame = CGRectOffset(frameForToolbar, 0, animatonOffset)
             
             // Captions
             for page in visiblePages {
@@ -1734,27 +1762,44 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
         UIView.animateWithDuration(animationDuration, animations: {
             let alpha = CGFloat(hidden ? 0.0 : 1.0)
 
-            // Nav bar slides up on it's own on iOS 7+
             if let navi = self.navigationController {
-                navi.navigationBar.alpha = alpha
+                if let navi = self.navigationController {
+                    navi.setNavigationBarHidden(hidden, animated: true)
+                }
             }
             
             // Toolbar
-            self.toolbar.frame = self.frameForToolbarAtOrientation(self.interfaceOrientation)
+            self.toolbar.frame = self.frameForToolbar
             
             if hidden {
                 self.toolbar.frame = CGRectOffset(self.toolbar.frame, 0, animatonOffset)
                 self.view.backgroundColor = UIColor.blackColor()
                 
                 self.pagingScrollView.backgroundColor = UIColor.blackColor()
+                
+                if let navi = self.navigationController {
+                    navi.view.backgroundColor = UIColor.blackColor()
+                }
+                
+                for page in self.visiblePages {
+                    page.backgroundColor = UIColor.blackColor()
+                }
             }
             else {
                 self.view.backgroundColor = UIColor.whiteColor()
                 
                 self.pagingScrollView.backgroundColor = UIColor.whiteColor()
+                
+                if let navi = self.navigationController {
+                    navi.view.backgroundColor = UIColor.whiteColor()
+                }
+                
+                for page in self.visiblePages {
+                    page.backgroundColor = UIColor.whiteColor()
+                }
             }
             
-            self.toolbar.alpha = alpha
+            self.toolbar.alpha = hidden ? 0.0 : self.toolbarAlpha
 
             // Captions
             for page in self.visiblePages {
@@ -1768,7 +1813,7 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
                     }
                     
                     v.frame = captionFrame
-                    v.alpha = alpha
+                    v.alpha = hidden ? 0.0 : self.captionAlpha
                 }
             }
             
@@ -1781,7 +1826,6 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
                     v.frame = newFrame
                 }
             }
-
         })
         
         // Control hiding timer
@@ -1918,28 +1962,27 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
                 }
                 /*
                 // Show activity view controller
-                NSMutableArray *items = [NSMutableArray arrayWithObject:[photo underlyingImage]]
-                if photo.caption {
-                    [items addObject:photo.caption]
+                var items = NSMutableArray(object: photo.underlyingImage)
+                if photo.caption != nil {
+                    items.append(photo.caption!)
                 }
-                self.activityViewController = UIActivityViewController alloc] initWithActivityItems:items applicationActivities:nil]
+                activityViewController = UIActivityViewController(activityItems: items, applicationActivities: nil)
                 
                 // Show loading spinner after a couple of seconds
                 double delayInSeconds = 2.0
-                dispatchtimet popTime = dispatchtime(DISPATCHTIMENOW, (int64t)(delayInSeconds * NSECPERSEC))
-                dispatchafter(popTime, dispatchgetmainqueue(), ^(void){
+                dispatch_timet popTime = dispatchtime(DISPATCH_TIME_NOW, Int64(delayInSeconds * NSEC_PER_SEC))
+                dispatch_after(popTime, dispatch_get_main_queue()) {
                     if self.activityViewController {
-                        showProgressHUDWithMessage:nil]
+                        showProgressHUDWithMessage(nil)
                     }
-                })
+                }
 
                 // Show
-                typeof(self) weak weakSelf = self
-                [self.activityViewController setCompletionHandler:^(NSString *activityType, BOOL completed) {
-                    weakSelf.activityViewController = nil
-                    [weakSelf hideControlsAfterDelay]
-                    [weakSelf hideProgressHUD:true]
-                }]
+                activityViewController.setCompletionHandler({ [weak self] activityType, completed in
+                    self!.activityViewController = nil
+                    self!.hideControlsAfterDelay()
+                    self!.hideProgressHUD(true)
+                })
             
                 self.activityViewController.popoverPresentationController.barButtonItem = actionButton
             

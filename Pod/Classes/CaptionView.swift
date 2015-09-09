@@ -15,26 +15,15 @@ public class CaptionView: UIToolbar {
     public let labelPadding = CGFloat(10.0)
 
     init(photo: Photo?) {
-        super.init(frame: CGRectMake(0, 0, 320, 44)) // Random initial frame
-        
-        userInteractionEnabled = false
+        super.init(frame: CGRectMake(0, 0, 320.0, 44.0)) // Random initial frame
         self.photo = photo
-        barStyle = .Default
-        tintColor = nil
-        barTintColor = nil
-        barStyle = .Default;
-        setBackgroundImage(nil, forToolbarPosition: .Any, barMetrics: .Default)
-        autoresizingMask =
-            .FlexibleWidth |
-            .FlexibleTopMargin |
-            .FlexibleLeftMargin |
-            .FlexibleRightMargin
         
         setupCaption()
     }
 
     public required init(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
+        setupCaption()
     }
     
     public override func sizeThatFits(size: CGSize) -> CGSize {
@@ -60,13 +49,28 @@ public class CaptionView: UIToolbar {
     }
 
     private func setupCaption() {
+        userInteractionEnabled = false
+        barStyle = .Default
+        tintColor = UIColor.clearColor()
+        barTintColor = UIColor.whiteColor()
+        backgroundColor = UIColor.whiteColor()
+        opaque = false
+        translucent = true
+        clipsToBounds = true
+        setBackgroundImage(nil, forToolbarPosition: .Any, barMetrics: .Default)
+        autoresizingMask =
+            .FlexibleWidth |
+            .FlexibleTopMargin |
+            .FlexibleLeftMargin |
+            .FlexibleRightMargin
+        
         label = UILabel(frame: CGRectIntegral(CGRectMake(
             labelPadding,
             0.0,
             self.bounds.size.width - labelPadding * 2.0,
             self.bounds.size.height)))
             
-        label.autoresizingMask = UIViewAutoresizing.FlexibleWidth | UIViewAutoresizing.FlexibleHeight
+        label.autoresizingMask = .FlexibleWidth | .FlexibleHeight
         label.opaque = false
         label.backgroundColor = UIColor.clearColor()
         label.textAlignment = NSTextAlignment.Center

@@ -17,7 +17,7 @@ public class ZoomingScrollView: UIScrollView, UIScrollViewDelegate, TapDetecting
     public weak var playButton: UIButton?
 
     private weak var photoBrowser: PhotoBrowser!
-	private var tapView: TapDetectingView? // for background taps
+	private var tapView = TapDetectingView(frame: CGRectZero) // for background taps
 	private var photoImageView = TapDetectingImageView(frame: CGRectZero)
 	private var loadingIndicator = DACircularProgressView(frame: CGRectMake(140.0, 30.0, 40.0, 40.0))
     private var loadingError: UIImageView?
@@ -31,15 +31,14 @@ public class ZoomingScrollView: UIScrollView, UIScrollViewDelegate, TapDetecting
         
         // Tap view for background
         tapView = TapDetectingView(frame: bounds)
-        tapView!.tapDelegate = self
-        tapView!.autoresizingMask = UIViewAutoresizing.FlexibleWidth | UIViewAutoresizing.FlexibleHeight
-        tapView!.backgroundColor = UIColor.whiteColor()
-        addSubview(tapView!)
+        tapView.tapDelegate = self
+        tapView.autoresizingMask = .FlexibleWidth | .FlexibleHeight
+        tapView.backgroundColor = UIColor.whiteColor()
+        addSubview(tapView)
         
         // Image view
         photoImageView.tapDelegate = self
         photoImageView.contentMode = UIViewContentMode.Center
-        photoImageView.backgroundColor = UIColor.whiteColor()
         addSubview(photoImageView)
         
         // Loading indicator
@@ -47,10 +46,10 @@ public class ZoomingScrollView: UIScrollView, UIScrollViewDelegate, TapDetecting
         loadingIndicator.thicknessRatio = 0.1
         loadingIndicator.roundedCorners = 0
         loadingIndicator.autoresizingMask =
-            UIViewAutoresizing.FlexibleLeftMargin |
-            UIViewAutoresizing.FlexibleTopMargin |
-            UIViewAutoresizing.FlexibleBottomMargin |
-            UIViewAutoresizing.FlexibleRightMargin
+            .FlexibleLeftMargin |
+            .FlexibleTopMargin |
+            .FlexibleBottomMargin |
+            .FlexibleRightMargin
         
         addSubview(loadingIndicator)
 
@@ -67,7 +66,7 @@ public class ZoomingScrollView: UIScrollView, UIScrollViewDelegate, TapDetecting
         showsHorizontalScrollIndicator = false
         showsVerticalScrollIndicator = false
         decelerationRate = UIScrollViewDecelerationRateFast
-        autoresizingMask = UIViewAutoresizing.FlexibleWidth | UIViewAutoresizing.FlexibleHeight
+        autoresizingMask = .FlexibleWidth | .FlexibleHeight
     }
 
     public required init(coder aDecoder: NSCoder) {
@@ -95,6 +94,17 @@ public class ZoomingScrollView: UIScrollView, UIScrollViewDelegate, TapDetecting
         }
         
         return false
+    }
+    
+    public override var backgroundColor: UIColor? {
+        set(color) {
+            tapView.backgroundColor = color
+            super.backgroundColor = color
+        }
+        
+        get {
+            return super.backgroundColor
+        }
     }
 
     var imageHidden: Bool {
@@ -195,8 +205,8 @@ public class ZoomingScrollView: UIScrollView, UIScrollViewDelegate, TapDetecting
                 }
                 
                 loadingError!.frame = CGRectMake(
-                    CGFloat(floorf(Float(bounds.size.width - loadingError!.frame.size.width) / 2.0)),
-                    CGFloat(floorf(Float(bounds.size.height - loadingError!.frame.size.height) / 2.0)),
+                    floorcgf((bounds.size.width - loadingError!.frame.size.width) / 2.0),
+                    floorcgf((bounds.size.height - loadingError!.frame.size.height) / 2.0),
                     loadingError!.frame.size.width,
                     loadingError!.frame.size.height)
             }
@@ -233,9 +243,9 @@ public class ZoomingScrollView: UIScrollView, UIScrollViewDelegate, TapDetecting
     }
 
     private func showLoadingIndicator() {
-        zoomScale = 0.0
-        minimumZoomScale = 0.0
-        maximumZoomScale = 0.0
+        zoomScale = 0.1
+        minimumZoomScale = 0.1
+        maximumZoomScale = 0.1
         loadingIndicator.progress = 0.0
         loadingIndicator.hidden = false
         
@@ -334,23 +344,21 @@ public class ZoomingScrollView: UIScrollView, UIScrollViewDelegate, TapDetecting
 
     public override func layoutSubviews() {
         // Update tap view frame
-        if let tv = tapView {
-            tv.frame = bounds
-        }
+        tapView.frame = bounds
         
         // Position indicators (centre does not seem to work!)
         if !loadingIndicator.hidden {
             loadingIndicator.frame = CGRectMake(
-                CGFloat(floorf(Float(bounds.size.width - loadingIndicator.frame.size.width) / 2.0)),
-                CGFloat(floorf(Float(bounds.size.height - loadingIndicator.frame.size.height) / 2.0)),
+                floorcgf((bounds.size.width - loadingIndicator.frame.size.width) / 2.0),
+                floorcgf((bounds.size.height - loadingIndicator.frame.size.height) / 2.0),
                 loadingIndicator.frame.size.width,
                 loadingIndicator.frame.size.height)
         }
         
         if let le = loadingError {
             le.frame = CGRectMake(
-                CGFloat(floorf(Float(bounds.size.width - le.frame.size.width) / 2.0)),
-                CGFloat(floorf(Float(bounds.size.height - le.frame.size.height) / 2.0)),
+                floorcgf((bounds.size.width - le.frame.size.width) / 2.0),
+                floorcgf((bounds.size.height - le.frame.size.height) / 2.0),
                 le.frame.size.width,
                 le.frame.size.height)
         }
@@ -359,12 +367,12 @@ public class ZoomingScrollView: UIScrollView, UIScrollViewDelegate, TapDetecting
         super.layoutSubviews()
         
         // Center the image as it becomes smaller than the size of the screen
-        let boundsSize = self.bounds.size
+        let boundsSize = bounds.size
         var frameToCenter = photoImageView.frame
         
         // Horizontally
         if frameToCenter.size.width < boundsSize.width {
-            frameToCenter.origin.x = CGFloat(floorf(Float(boundsSize.width - frameToCenter.size.width) / 2.0))
+            frameToCenter.origin.x = floorcgf((boundsSize.width - frameToCenter.size.width) / 2.0)
         }
         else {
             frameToCenter.origin.x = 0.0
@@ -372,7 +380,7 @@ public class ZoomingScrollView: UIScrollView, UIScrollViewDelegate, TapDetecting
         
         // Vertically
         if frameToCenter.size.height < boundsSize.height {
-            frameToCenter.origin.y = CGFloat(floorf(Float(boundsSize.height - frameToCenter.size.height) / 2.0))
+            frameToCenter.origin.y = floorcgf((boundsSize.height - frameToCenter.size.height) / 2.0)
         }
         else {
             frameToCenter.origin.y = 0.0
@@ -383,7 +391,7 @@ public class ZoomingScrollView: UIScrollView, UIScrollViewDelegate, TapDetecting
             photoImageView.frame = frameToCenter
         }
     }
-
+    
     //MARK: - UIScrollViewDelegate
 
     public func viewForZoomingInScrollView(scrollView: UIScrollView) -> UIView? {
