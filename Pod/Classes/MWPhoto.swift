@@ -10,7 +10,7 @@
 import UIKit
 import AssetsLibrary
 import Photos
-import SDWebImage
+import MapleBacon
 import Photos
 
 var PHInvalidImageRequestID = PHImageRequestID(0)
@@ -28,7 +28,7 @@ public class MWPhoto: Photo {
     private var assetTargetSize = CGSizeMake(0.0, 0.0)
     
     private var loadingInProgress = false
-    private var webImageOperation: SDWebImageOperation?
+    private var operation: ImageDownloadOperation?
     private var assetRequestID = PHInvalidImageRequestID
     
     //MARK: - Init
@@ -38,6 +38,12 @@ public class MWPhoto: Photo {
     public convenience init(image: UIImage) {
         self.init()
         self.image = image
+    }
+    
+    public convenience init(url: NSURL, caption: String) {
+        self.init()
+        self.photoURL = url
+        self.caption = caption
     }
 
     public convenience init(url: NSURL) {
@@ -134,7 +140,7 @@ public class MWPhoto: Photo {
         else
         if let purl = photoURL {
             // Check what type of url it is
-            if purl.scheme != nil && purl.scheme!.lowercaseString == "assets-library" {
+            if purl.scheme.lowercaseString == "assets-library" {
                 // Load from assets library
                 performLoadUnderlyingImageAndNotifyWithAssetsLibraryURL(purl)
             }
@@ -158,42 +164,44 @@ public class MWPhoto: Photo {
             imageLoadingComplete()
         }
     }
+    
+    func cancelDownload() {
+        operation?.cancel()
+    }
 
     // Load from local file
     private func performLoadUnderlyingImageAndNotifyWithWebURL(url: NSURL) {
-        //try {
-            let manager = SDWebImageManager.sharedManager()
-            webImageOperation = manager.downloadImageWithURL(
-                url,
-                options: SDWebImageOptions.allZeros,
-                progress: { receivedSize, expectedSize in
-                    if expectedSize > 0 {
-                        NSNotificationCenter.defaultCenter().postNotificationName(
-                            MWPHOTO_PROGRESS_NOTIFICATION,
-                            object: [
-                                "progress": Float(receivedSize) / Float(expectedSize),
-                                "photo": self
-                            ])
+        cancelDownload()
+        
+        /*
+            progress: { receivedSize, expectedSize in
+                if expectedSize > 0 {
+                    NSNotificationCenter.defaultCenter().postNotificationName(
+                        MWPHOTO_PROGRESS_NOTIFICATION,
+                        object: [
+                            "progress": Float(receivedSize) / Float(expectedSize),
+                            "photo": self
+                        ])
+                }
+            },
+        */
+        
+        operation = ImageManager.sharedManager.downloadImageAtURL(url, cacheScaled: false, imageView: nil)
+        { [weak self] imageInstance, error in
+            if let strongSelf = self {
+                dispatch_async(dispatch_get_main_queue()) {
+                    strongSelf.operation = nil
+                    
+                    if let ii = imageInstance {
+                        strongSelf.underlyingImage = ii.image
                     }
-                },
-                completed: { image, error, cacheType, finished, imageURL in
-                    //if error != nil {
-                     //MWLog(@"SDWebImage failed to download image: %@", error)
-                    //}
-
-                    self.webImageOperation = nil
-                    self.underlyingImage = image
 
                     dispatch_async(dispatch_get_main_queue()) {
-                        self.imageLoadingComplete()
+                        strongSelf.imageLoadingComplete()
                     }
-                })
-        //}
-        //catch (NSException e) {
-        //    MWLog("Photo from web: \(e)")
-        //    webImageOperation = nil
-        //    imageLoadingComplete()
-        //}
+                }
+            }
+        }
     }
 
     // Load from local file
@@ -302,8 +310,8 @@ public class MWPhoto: Photo {
     }
 
     public func cancelAnyLoading() {
-        if let wo = webImageOperation {
-            wo.cancel()
+        if let op = operation {
+            op.cancel()
             loadingInProgress = false
         }
         else

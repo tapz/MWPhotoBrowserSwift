@@ -32,7 +32,7 @@ public class ZoomingScrollView: UIScrollView, UIScrollViewDelegate, TapDetecting
         // Tap view for background
         tapView = TapDetectingView(frame: bounds)
         tapView.tapDelegate = self
-        tapView.autoresizingMask = .FlexibleWidth | .FlexibleHeight
+        tapView.autoresizingMask = [.FlexibleWidth, .FlexibleHeight]
         tapView.backgroundColor = UIColor.whiteColor()
         addSubview(tapView)
         
@@ -46,10 +46,7 @@ public class ZoomingScrollView: UIScrollView, UIScrollViewDelegate, TapDetecting
         loadingIndicator.thicknessRatio = 0.1
         loadingIndicator.roundedCorners = 0
         loadingIndicator.autoresizingMask =
-            .FlexibleLeftMargin |
-            .FlexibleTopMargin |
-            .FlexibleBottomMargin |
-            .FlexibleRightMargin
+            [.FlexibleLeftMargin, .FlexibleTopMargin, .FlexibleBottomMargin, .FlexibleRightMargin]
         
         addSubview(loadingIndicator)
 
@@ -66,10 +63,10 @@ public class ZoomingScrollView: UIScrollView, UIScrollViewDelegate, TapDetecting
         showsHorizontalScrollIndicator = false
         showsVerticalScrollIndicator = false
         decelerationRate = UIScrollViewDecelerationRateFast
-        autoresizingMask = .FlexibleWidth | .FlexibleHeight
+        autoresizingMask = [.FlexibleWidth, .FlexibleHeight]
     }
 
-    public required init(coder aDecoder: NSCoder) {
+    public required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
     }
 
@@ -126,7 +123,7 @@ public class ZoomingScrollView: UIScrollView, UIScrollViewDelegate, TapDetecting
                 mwPhoto!.cancelAnyLoading()
             }
             mwPhoto = p
-            if let img = photoBrowser.imageForPhoto(mwPhoto) {
+            if photoBrowser.imageForPhoto(mwPhoto) != nil {
                 self.displayImage()
             }
             else {
@@ -195,10 +192,7 @@ public class ZoomingScrollView: UIScrollView, UIScrollViewDelegate, TapDetecting
                     
                     loadingError!.userInteractionEnabled = false
                     loadingError!.autoresizingMask =
-                        .FlexibleLeftMargin |
-                        .FlexibleTopMargin |
-                        .FlexibleBottomMargin |
-                        .FlexibleRightMargin
+                        [.FlexibleLeftMargin, .FlexibleTopMargin, .FlexibleBottomMargin, .FlexibleRightMargin]
                     
                     loadingError!.sizeToFit()
                     addSubview(loadingError!)
@@ -226,13 +220,11 @@ public class ZoomingScrollView: UIScrollView, UIScrollViewDelegate, TapDetecting
         dispatch_async(dispatch_get_main_queue()) {
             let dict = notification.object as! [String : AnyObject]
             
-            if let photoWithProgress = dict["photo"] as? Photo {
-                if let p = self.photo {
-                    if photoWithProgress.equals(p) {
-                        if let progress = dict["progress"] as? Float {
-                            self.loadingIndicator.progress = CGFloat(max(min(1.0, progress), 0.0))
-                        }
-                    }
+            if let photoWithProgress = dict["photo"] as? Photo,
+                p = self.photo where photoWithProgress.equals(p)
+            {
+                if let progress = dict["progress"] as? Float {
+                    self.loadingIndicator.progress = CGFloat(max(min(1.0, progress), 0.0))
                 }
             }
         }
@@ -256,22 +248,20 @@ public class ZoomingScrollView: UIScrollView, UIScrollViewDelegate, TapDetecting
 
     private func initialZoomScaleWithMinScale() -> CGFloat {
         var zoomScale = minimumZoomScale
-        if let pb = photoBrowser {
-            if pb.zoomPhotosToFill {
-                // Zoom image to fill if the aspect ratios are fairly similar
-                let boundsSize = self.bounds.size
-                let imageSize = photoImageView.image != nil ? photoImageView.image!.size : CGSizeMake(0.0, 0.0)
-                let boundsAR = boundsSize.width / boundsSize.height
-                let imageAR = imageSize.width / imageSize.height
-                let xScale = boundsSize.width / imageSize.width    // the scale needed to perfectly fit the image width-wise
-                let yScale = boundsSize.height / imageSize.height  // the scale needed to perfectly fit the image height-wise
-                
-                // Zooms standard portrait images on a 3.5in screen but not on a 4in screen.
-                if (abs(boundsAR - imageAR) < 0.17) {
-                    zoomScale = max(xScale, yScale)
-                    // Ensure we don't zoom in or out too far, just in case
-                    zoomScale = min(max(minimumZoomScale, zoomScale), maximumZoomScale)
-                }
+        if let pb = photoBrowser where pb.zoomPhotosToFill {
+            // Zoom image to fill if the aspect ratios are fairly similar
+            let boundsSize = self.bounds.size
+            let imageSize = photoImageView.image != nil ? photoImageView.image!.size : CGSizeMake(0.0, 0.0)
+            let boundsAR = boundsSize.width / boundsSize.height
+            let imageAR = imageSize.width / imageSize.height
+            let xScale = boundsSize.width / imageSize.width    // the scale needed to perfectly fit the image width-wise
+            let yScale = boundsSize.height / imageSize.height  // the scale needed to perfectly fit the image height-wise
+            
+            // Zooms standard portrait images on a 3.5in screen but not on a 4in screen.
+            if (abs(boundsAR - imageAR) < 0.17) {
+                zoomScale = max(xScale, yScale)
+                // Ensure we don't zoom in or out too far, just in case
+                zoomScale = min(max(minimumZoomScale, zoomScale), maximumZoomScale)
             }
         }
         
@@ -402,7 +392,7 @@ public class ZoomingScrollView: UIScrollView, UIScrollViewDelegate, TapDetecting
         photoBrowser.cancelControlHiding()
     }
 
-    public func scrollViewWillBeginZooming(scrollView: UIScrollView, withView view: UIView) {
+    public func scrollViewWillBeginZooming(scrollView: UIScrollView, withView view: UIView?) {
         scrollEnabled = true // reset
         photoBrowser.cancelControlHiding()
     }

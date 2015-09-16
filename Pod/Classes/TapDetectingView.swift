@@ -22,12 +22,12 @@ public class TapDetectingView: UIView {
         userInteractionEnabled = true
     }
     
-    public required init(coder aDecoder: NSCoder) {
+    public required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
     }
 
-    public override func touchesEnded(touches: Set<NSObject>, withEvent event: UIEvent) {
-        if let touch = touches.first as? UITouch  {
+    public override func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent?) {
+        if let touch = touches.first  {
             let tapCount = touch.tapCount
         
             switch tapCount {

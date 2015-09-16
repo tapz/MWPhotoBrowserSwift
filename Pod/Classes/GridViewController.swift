@@ -17,7 +17,7 @@ public class GridViewController: UICollectionViewController {
         super.init(collectionViewLayout: UICollectionViewFlowLayout())
     }
 
-    public required init(coder aDecoder: NSCoder) {
+    public required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
     }
 
@@ -65,38 +65,34 @@ public class GridViewController: UICollectionViewController {
         }
         
         // Check if current item is visible and if not, make it so!
-        if let b = browser {
-            if b.numberOfPhotos > 0 {
-                let currentPhotoIndexPath = NSIndexPath(forItem: b.currentIndex, inSection: 0)
-                let visibleIndexPaths = collectionView!.indexPathsForVisibleItems()
-                
-                var currentVisible = false
-                
-                for indexPath in visibleIndexPaths {
-                    if let path = indexPath as? NSIndexPath {
-                        if path == currentPhotoIndexPath {
-                            currentVisible = true
-                            break
-                        }
-                    }
+        if let b = browser where b.numberOfPhotos > 0 {
+            let currentPhotoIndexPath = NSIndexPath(forItem: b.currentIndex, inSection: 0)
+            let visibleIndexPaths = collectionView!.indexPathsForVisibleItems()
+            
+            var currentVisible = false
+            
+            for indexPath in visibleIndexPaths {
+                if indexPath == currentPhotoIndexPath {
+                    currentVisible = true
+                    break
                 }
-                
-                if !currentVisible {
-                    collectionView!.scrollToItemAtIndexPath(currentPhotoIndexPath, atScrollPosition: UICollectionViewScrollPosition.None, animated: false)
-                }
+            }
+            
+            if !currentVisible {
+                collectionView!.scrollToItemAtIndexPath(currentPhotoIndexPath, atScrollPosition: UICollectionViewScrollPosition.None, animated: false)
             }
         }
     }
 
     private func performLayout() {
-        if let navi = navigationController {
+        if let navi = navigationController,
+            cv = collectionView
+        {
             let navBar = navi.navigationBar
             
-            if let cv = collectionView {
-                cv.contentInset = UIEdgeInsetsMake(
-                    navBar.frame.origin.y + navBar.frame.size.height + gutter,
-                    0.0, 0.0, 0.0)
-            }
+            cv.contentInset = UIEdgeInsetsMake(
+                navBar.frame.origin.y + navBar.frame.size.height + gutter,
+                0.0, 0.0, 0.0)
         }
     }
 
@@ -132,20 +128,20 @@ public class GridViewController: UICollectionViewController {
     public override func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCellWithReuseIdentifier("GridCell", forIndexPath: indexPath) as! GridCell
         
-        if let b = browser {
-            if let photo = b.thumbPhotoAtIndex(indexPath.row) {
-                cell.photo = photo
-                cell.gridController = self
-                cell.selectionMode = selectionMode
-                cell.index = indexPath.row
-                cell.selected = b.photoIsSelectedAtIndex(indexPath.row)
-            
-                if let img = b.imageForPhoto(photo) {
-                    cell.displayImage()
-                }
-                else {
-                    photo.loadUnderlyingImageAndNotify()
-                }
+        if let b = browser,
+            photo = b.thumbPhotoAtIndex(indexPath.row)
+        {
+            cell.photo = photo
+            cell.gridController = self
+            cell.selectionMode = selectionMode
+            cell.index = indexPath.row
+            cell.selected = b.photoIsSelectedAtIndex(indexPath.row)
+        
+            if let _ = b.imageForPhoto(photo) {
+                cell.displayImage()
+            }
+            else {
+                photo.loadUnderlyingImageAndNotify()
             }
         }
         

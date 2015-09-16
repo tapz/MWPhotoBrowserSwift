@@ -10,8 +10,8 @@ import UIKit
 import MBProgressHUD
 import MediaPlayer
 import QuartzCore
-import SDWebImage
 import MBProgressHUD
+import MapleBacon
 
 func floorcgf(x: CGFloat) -> CGFloat {
     return CGFloat(floorf(Float(x)))
@@ -127,7 +127,7 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
         initialisation()
     }
 
-    public required init(coder: NSCoder) {
+    public required init?(coder: NSCoder) {
         super.init(coder: coder)
         initialisation()
     }
@@ -180,7 +180,7 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
         pagingScrollView.delegate = nil
         NSNotificationCenter.defaultCenter().removeObserver(self)
         releaseAllUnderlyingPhotos(false)
-        SDImageCache.sharedImageCache().clearMemory() // clear memory
+        MapleBaconStorage.sharedStorage.clearMemoryStorage() // clear memory
     }
 
     private func releaseAllUnderlyingPhotos(preserveCurrent: Bool) {
@@ -245,7 +245,7 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
         // Setup paging scrolling view
         let pagingScrollViewFrame = frameForPagingScrollView
         pagingScrollView = UIScrollView(frame: pagingScrollViewFrame)
-        pagingScrollView.autoresizingMask = .FlexibleWidth | .FlexibleHeight
+        pagingScrollView.autoresizingMask = [.FlexibleWidth, .FlexibleHeight]
         pagingScrollView.pagingEnabled = true
         pagingScrollView.delegate = self
         pagingScrollView.showsHorizontalScrollIndicator = false
@@ -263,7 +263,7 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
         toolbar.setBackgroundImage(nil, forToolbarPosition: .Any, barMetrics: .Default)
         toolbar.setBackgroundImage(nil, forToolbarPosition: .Any, barMetrics: .Compact)
         toolbar.barStyle = .Default
-        toolbar.autoresizingMask = .FlexibleTopMargin | .FlexibleWidth
+        toolbar.autoresizingMask = [.FlexibleTopMargin, .FlexibleWidth]
         
         // Toolbar Items
         if displayNavArrows {
@@ -305,7 +305,7 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
         // Swipe to dismiss
         if enableSwipeToDismiss {
             let swipeGesture = UISwipeGestureRecognizer(target: self, action: Selector("doneButtonPressed:"))
-            swipeGesture.direction = .Down | .Up
+            swipeGesture.direction = [.Down, .Up]
             view.addGestureRecognizer(swipeGesture)
         }
         
@@ -333,12 +333,11 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
         // Navigation buttons
         if let navi = navigationController {
             if navi.viewControllers.count > 0 &&
-               navi.viewControllers[0] as? NSObject == self
+               navi.viewControllers[0] == self
             {
                 // We're first on stack so show done button
                 doneButton = UIBarButtonItem(
-                    title: NSLocalizedString("Done", comment: ""),
-                    style: UIBarButtonItemStyle.Plain,
+                    barButtonSystemItem: UIBarButtonSystemItem.Done,
                     target: self,
                     action: Selector("doneButtonPressed:"))
                 
@@ -356,25 +355,25 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
             }
             else {
                 // We're not first so show back button
-                if let navi = navigationController {
-                    if let previousViewController = navi.viewControllers[navi.viewControllers.count - 2] as? UINavigationController {
-                        let backButtonTitle = previousViewController.navigationItem.backBarButtonItem != nil ?
-                            previousViewController.navigationItem.backBarButtonItem!.title :
-                            previousViewController.title
-                        
-                        let newBackButton = UIBarButtonItem(title: backButtonTitle, style: .Plain, target: nil, action: nil)
-                        
-                        // Appearance
-                        newBackButton.setBackButtonBackgroundImage(nil, forState: .Normal, barMetrics: .Default)
-                        newBackButton.setBackButtonBackgroundImage(nil, forState: .Normal, barMetrics: .Compact)
-                        newBackButton.setBackButtonBackgroundImage(nil, forState: .Highlighted, barMetrics: .Default)
-                        newBackButton.setBackButtonBackgroundImage(nil, forState: .Highlighted, barMetrics: .Compact)
-                        newBackButton.setTitleTextAttributes([String : AnyObject](), forState: .Normal)
-                        newBackButton.setTitleTextAttributes([String : AnyObject](), forState: .Highlighted)
-                        
-                        previousViewControllerBackButton = previousViewController.navigationItem.backBarButtonItem // remember previous
-                        previousViewController.navigationItem.backBarButtonItem = newBackButton
-                    }
+                if let navi = navigationController,
+                    previousViewController = navi.viewControllers[navi.viewControllers.count - 2] as? UINavigationController
+                {
+                    let backButtonTitle = previousViewController.navigationItem.backBarButtonItem != nil ?
+                        previousViewController.navigationItem.backBarButtonItem!.title :
+                        previousViewController.title
+                    
+                    let newBackButton = UIBarButtonItem(title: backButtonTitle, style: .Plain, target: nil, action: nil)
+                    
+                    // Appearance
+                    newBackButton.setBackButtonBackgroundImage(nil, forState: .Normal, barMetrics: .Default)
+                    newBackButton.setBackButtonBackgroundImage(nil, forState: .Normal, barMetrics: .Compact)
+                    newBackButton.setBackButtonBackgroundImage(nil, forState: .Highlighted, barMetrics: .Default)
+                    newBackButton.setBackButtonBackgroundImage(nil, forState: .Highlighted, barMetrics: .Compact)
+                    newBackButton.setTitleTextAttributes([String : AnyObject](), forState: .Normal)
+                    newBackButton.setTitleTextAttributes([String : AnyObject](), forState: .Highlighted)
+                    
+                    previousViewControllerBackButton = previousViewController.navigationItem.backBarButtonItem // remember previous
+                    previousViewController.navigationItem.backBarButtonItem = newBackButton
                 }
             }
         }
@@ -464,7 +463,7 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
             // We're in a navigation controller so get previous one!
             if let navi = navigationController {
                 if navi.viewControllers.count > 1 {
-                    presenting = navi.viewControllers[navi.viewControllers.count - 2] as? UIViewController
+                    presenting = navi.viewControllers[navi.viewControllers.count - 2]
                 }
             }
         }
@@ -527,12 +526,10 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
         viewIsActive = true
         
         // Autoplay if first is video
-        if !viewHasAppearedInitially {
-            if autoPlayOnAppear {
-                if let photo = photoAtIndex(currentPageIndex) {
-                    if photo.isVideo {
-                        playVideoAtIndex(currentPageIndex)
-                    }
+        if !viewHasAppearedInitially && autoPlayOnAppear {
+            if let photo = photoAtIndex(currentPageIndex) {
+                if photo.isVideo {
+                    playVideoAtIndex(currentPageIndex)
                 }
             }
         }
@@ -545,7 +542,7 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
         pageIndexBeforeRotation = currentPageIndex
         
         if let navi = navigationController {
-            let viewControllers = navi.viewControllers as! [UIViewController]
+            let viewControllers = navi.viewControllers 
             
             // Check that we're being popped for good
             if viewControllers[0] !== self {
@@ -627,23 +624,22 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
     }
 
     func restorePreviousNavBarAppearance(animated: Bool) {
-        if didSavePreviousStateOfNavBar {
-            if let navi = navigationController {
-                navi.setNavigationBarHidden(previousNavBarHidden, animated: animated)
-                let navBar = navi.navigationBar
-                navBar.tintColor = previousNavBarTintColor
-                navBar.translucent = previousNavBarTranslucent
-                navBar.barTintColor = previousNavBarBarTintColor
-                navBar.barStyle = previousNavBarStyle
-                navBar.setBackgroundImage(previousNavigationBarBackgroundImageDefault, forBarMetrics: UIBarMetrics.Default)
-                navBar.setBackgroundImage(previousNavigationBarBackgroundImageLandscapePhone, forBarMetrics: UIBarMetrics.Compact)
+        if let navi = navigationController where didSavePreviousStateOfNavBar {
+            navi.setNavigationBarHidden(previousNavBarHidden, animated: animated)
+            let navBar = navi.navigationBar
+            navBar.tintColor = previousNavBarTintColor
+            navBar.translucent = previousNavBarTranslucent
+            navBar.barTintColor = previousNavBarBarTintColor
+            navBar.barStyle = previousNavBarStyle
+            navBar.setBackgroundImage(previousNavigationBarBackgroundImageDefault, forBarMetrics: UIBarMetrics.Default)
+            navBar.setBackgroundImage(previousNavigationBarBackgroundImageLandscapePhone, forBarMetrics: UIBarMetrics.Compact)
 
-                // Restore back button if we need to
-                if previousViewControllerBackButton != nil {
-                    let previousViewController = navi.topViewController // We've disappeared so previous is falsew top
+            // Restore back button if we need to
+            if previousViewControllerBackButton != nil {
+                if let previousViewController = navi.topViewController { // We've disappeared so previous is falsew top
                     previousViewController.navigationItem.backBarButtonItem = previousViewControllerBackButton
-                    previousViewControllerBackButton = nil
                 }
+                previousViewControllerBackButton = nil
             }
         }
     }
@@ -718,8 +714,8 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
 
     //MARK: - Rotation
 
-    public override func supportedInterfaceOrientations() -> Int {
-        return Int(UIInterfaceOrientationMask.All.rawValue)
+    public override func supportedInterfaceOrientations() -> UIInterfaceOrientationMask {
+        return UIInterfaceOrientationMask.All
     }
 
     public override func willRotateToInterfaceOrientation(toInterfaceOrientation: UIInterfaceOrientation, duration: NSTimeInterval) {
@@ -750,11 +746,9 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
     public override func didRotateFromInterfaceOrientation(fromInterfaceOrientation: UIInterfaceOrientation) {
         rotating = false
         // Ensure nav bar isn't re-displayed
-        if areControlsHidden {
-            if let navi = navigationController {
-                navi.navigationBarHidden = false
-                navi.navigationBar.alpha = 0
-            }
+        if let navi = navigationController where areControlsHidden {
+            navi.navigationBarHidden = false
+            navi.navigationBar.alpha = 0
         }
     }
 
@@ -845,7 +839,7 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
         var photo: Photo?
         
         if index < thumbPhotos.count {
-            if thumbPhotos[index] == nil {
+            if nil == thumbPhotos[index] {
                 if let d = delegate {
                     photo = d.thumbPhotoAtIndex(index, photoBrowser: self)
                 
@@ -868,11 +862,9 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
         if let d = delegate {
             captionView = d.captionViewForPhotoAtIndex(index, photoBrowser: self)
             
-            if nil == captionView {
-                if let p = photoAtIndex(index) {
-                    if count(p.caption) > 0 {
-                        captionView = CaptionView(photo: p)
-                    }
+            if let p = photoAtIndex(index) where nil == captionView {
+                if p.caption.characters.count > 0 {
+                    captionView = CaptionView(photo: p)
                 }
             }
         }
@@ -933,6 +925,7 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
                         }
                     }
                 }
+                
                 if pageIndex < numberOfPhotos - 1 {
                     // Preload index + 1
                     if let photo = photoAtIndex(pageIndex + 1) {
@@ -1020,7 +1013,7 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
             }
         }
         
-        visiblePages.subtract(recycledPages)
+        visiblePages = visiblePages.subtract(recycledPages)
         
         while recycledPages.count > 2 { // Only keep 2 recycled pages
             recycledPages.remove(recycledPages.first!)
@@ -1052,7 +1045,7 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
                 
                 // Add play button if needed
                 if page.displayingVideo() {
-                    let playButton = UIButton.buttonWithType(.Custom) as! UIButton
+                    let playButton = UIButton(type: .Custom)
                     playButton.setImage(UIImage.imageForResourcePath(
                         "MWPhotoBrowserSwift.bundle/PlayButtonOverlayLarge",
                         ofType: "png",
@@ -1072,7 +1065,7 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
                 
                 // Add selected button
                 if self.displaySelectionButtons {
-                    let selectedButton = UIButton.buttonWithType(.Custom) as! UIButton
+                    let selectedButton = UIButton(type: .Custom)
                     selectedButton.setImage(UIImage.imageForResourcePath(
                         "MWPhotoBrowserSwift.bundle/ImageSelectedOff",
                         ofType: "png",
@@ -1080,7 +1073,7 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
                         forState: .Normal)
                     
                     let selectedOnImage: UIImage?
-                    if count(customImageSelectedIconName) > 0 {
+                    if customImageSelectedIconName.characters.count > 0 {
                         selectedOnImage = UIImage(named: customImageSelectedIconName)
                     }
                     else {
@@ -1175,7 +1168,6 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
         }
         
         // Release images further away than +/-1
-        var i = 0
         if index > 0 {
             // Release anything < index - 1
             if index - 2 >= 0 {
@@ -1760,12 +1752,8 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
         }
         
         UIView.animateWithDuration(animationDuration, animations: {
-            let alpha = CGFloat(hidden ? 0.0 : 1.0)
-
             if let navi = self.navigationController {
-                if let navi = self.navigationController {
-                    navi.setNavigationBarHidden(hidden, animated: true)
-                }
+                navi.setNavigationBarHidden(hidden, animated: true)
             }
             
             // Toolbar
@@ -2060,4 +2048,30 @@ public protocol PhotoBrowserDelegate: class {
     func isPhotoSelectedAtIndex(index: Int, photoBrowser: PhotoBrowser) -> Bool
     func selectedChanged(selected: Bool, index: Int, photoBrowser: PhotoBrowser)
     func photoBrowserDidFinishModalPresentation(photoBrowser: PhotoBrowser)
+}
+
+public extension PhotoBrowserDelegate {
+    func captionViewForPhotoAtIndex(index: Int, photoBrowser: PhotoBrowser) -> CaptionView? {
+        return nil
+    }
+    
+    func didDisplayPhotoAtIndex(index: Int, photoBrowser: PhotoBrowser) {
+    
+    }
+    
+    func actionButtonPressedForPhotoAtIndex(index: Int, photoBrowser: PhotoBrowser) {
+        
+    }
+    
+    func isPhotoSelectedAtIndex(index: Int, photoBrowser: PhotoBrowser) -> Bool {
+        return false
+    }
+    
+    func selectedChanged(selected: Bool, index: Int, photoBrowser: PhotoBrowser) {
+    
+    }
+    
+    func titleForPhotoAtIndex(index: Int, photoBrowser: PhotoBrowser) -> String {
+        return ""
+    }
 }

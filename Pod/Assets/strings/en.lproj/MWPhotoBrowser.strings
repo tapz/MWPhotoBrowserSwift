@@ -1,0 +1,12 @@
+/* 
+  File.strings
+  Pods
+
+  Created by Tapani Saarinen on 09/09/15.
+
+*/
+
+"Select Photos" = "Select Photos";
+"photo" = "1 photo";
+"photos" = "{} photos";
+"of" = "{1} of {2}";

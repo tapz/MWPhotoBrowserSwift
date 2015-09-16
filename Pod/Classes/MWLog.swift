@@ -22,7 +22,7 @@ class MWLog: NSObject {
         let str = "\(tme) [\(tid)] " + format
         
         dispatch_async(queue) {
-            println(str)
+            print(str)
         }
     }
 }

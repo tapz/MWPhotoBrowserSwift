@@ -21,7 +21,7 @@ public class CaptionView: UIToolbar {
         setupCaption()
     }
 
-    public required init(coder aDecoder: NSCoder) {
+    public required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
         setupCaption()
     }
@@ -59,10 +59,7 @@ public class CaptionView: UIToolbar {
         clipsToBounds = true
         setBackgroundImage(nil, forToolbarPosition: .Any, barMetrics: .Default)
         autoresizingMask =
-            .FlexibleWidth |
-            .FlexibleTopMargin |
-            .FlexibleLeftMargin |
-            .FlexibleRightMargin
+            [.FlexibleWidth, .FlexibleTopMargin, .FlexibleLeftMargin, .FlexibleRightMargin]
         
         label = UILabel(frame: CGRectIntegral(CGRectMake(
             labelPadding,
@@ -70,14 +67,16 @@ public class CaptionView: UIToolbar {
             self.bounds.size.width - labelPadding * 2.0,
             self.bounds.size.height)))
             
-        label.autoresizingMask = .FlexibleWidth | .FlexibleHeight
+        label.autoresizingMask = [.FlexibleWidth, .FlexibleHeight]
         label.opaque = false
         label.backgroundColor = UIColor.clearColor()
         label.textAlignment = NSTextAlignment.Center
         label.lineBreakMode = .ByWordWrapping
+        label.minimumScaleFactor = 0.6
+        label.adjustsFontSizeToFitWidth = true
 
         label.numberOfLines = 0
-        label.textColor = UIColor.whiteColor()
+        label.textColor = UIColor.blackColor()
         label.font = UIFont.systemFontOfSize(17.0)
         
         if let p = photo {

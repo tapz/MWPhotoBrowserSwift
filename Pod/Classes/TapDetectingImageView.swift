@@ -17,22 +17,22 @@ public class TapDetectingImageView: UIImageView {
         userInteractionEnabled = true
     }
 
-    public override init(image: UIImage) {
+    public override init(image: UIImage?) {
         super.init(image: image)
         userInteractionEnabled = true
     }
 
-    public override init(image: UIImage, highlightedImage: UIImage?) {
+    public override init(image: UIImage?, highlightedImage: UIImage?) {
         super.init(image: image, highlightedImage: highlightedImage)
         userInteractionEnabled = true
     }
 
-    public required init(coder aDecoder: NSCoder) {
+    public required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
     }
 
-    public override func touchesEnded(touches: Set<NSObject>, withEvent event: UIEvent) {
-        if let touch = touches.first as? UITouch  {
+    public override func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent?) {
+        if let touch = touches.first  {
             let tapCount = touch.tapCount
         
             switch tapCount {
