@@ -21,7 +21,7 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
     private let padding = CGFloat(10.0)
 
     // Data
-    private var photoCount = 0
+    private var photoCount = -1
     private var photos = [Photo?]()
     private var thumbPhotos = [Photo?]()
 	private var fixedPhotosArray: [Photo]? // Provided via init
@@ -33,8 +33,8 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
 	private var visiblePages = Set<ZoomingScrollView>()
     private var recycledPages = Set<ZoomingScrollView>()
 	private var currentPageIndex = 0
-    private var previousPageIndex = 0
-    private var previousLayoutBounds = CGRectMake(0.0, 0.0, 0.0, 0.0)
+    private var previousPageIndex = Int.max
+    private var previousLayoutBounds = CGRectZero
 	private var pageIndexBeforeRotation = 0
 	
 	// Navigation & controls
@@ -70,7 +70,7 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
     public var hasBelongedToViewController = false
     public var isVCBasedStatusBarAppearance = false
     public var statusBarShouldBeHidden = false
-    public var displayActionButton = false
+    public var displayActionButton = true
     public var leaveStatusBarAlone = false
 	public var performingLayout = false
 	public var rotating = false
@@ -78,20 +78,20 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
     public var didSavePreviousStateOfNavBar = false
     public var skipNextPagingScrollViewPositioning = false
     public var viewHasAppearedInitially = false
-    public var currentGridContentOffset = CGPointMake(0.0, 0.0)
+    public var currentGridContentOffset = CGPointMake(0, CGFloat.max)
     
     var activityViewController: UIActivityViewController?
     
     public weak var delegate: PhotoBrowserDelegate?
-    public var zoomPhotosToFill = false
+    public var zoomPhotosToFill = true
     public var displayNavArrows = false
     public var displaySelectionButtons = false
     public var alwaysShowControls = false
-    public var enableGrid = false
-    public var enableSwipeToDismiss = false
+    public var enableGrid = true
+    public var enableSwipeToDismiss = true
     public var startOnGrid = false
     public var autoPlayOnAppear = false
-    public var delayToHideElements = NSTimeInterval(0.0)
+    public var delayToHideElements = NSTimeInterval(5.0)
     
     public var navBarTintColor = UIColor.blackColor()
     public var navBarBarTintColor = UIColor.blackColor()
@@ -102,7 +102,7 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
     
     public var captionAlpha = CGFloat(0.5)
     public var toolbarAlpha = CGFloat(0.8)
-
+    
     // Customise image selection icons as they are the only icons with a colour tint
     // Icon should be located in the app's main bundle
     public var customImageSelectedIconName = ""
@@ -143,29 +143,11 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
             isVCBasedStatusBarAppearance = true // default
         }
         
+        
         hidesBottomBarWhenPushed = true
-        hasBelongedToViewController = false
-        photoCount = -1
-        previousLayoutBounds = CGRectZero
-        currentPageIndex = 0
-        previousPageIndex = Int.max
-        displayActionButton = true
-        displayNavArrows = false
-        zoomPhotosToFill = true
-        performingLayout = false // Reset on view did appear
-        rotating = false
-        viewIsActive = false
-        enableGrid = true
-        startOnGrid = false
-        enableSwipeToDismiss = true
-        delayToHideElements = 5.0
-        currentGridContentOffset = CGPointMake(0, CGFloat.max)
-        didSavePreviousStateOfNavBar = false
         automaticallyAdjustsScrollViewInsets = false
         
-        if let navi = self.navigationController {
-            navi.view.backgroundColor = UIColor.whiteColor()
-        }
+        navigationController?.view.backgroundColor = UIColor.whiteColor()
         
         // Listen for MWPhoto falsetifications
         NSNotificationCenter.defaultCenter().addObserver(
@@ -508,10 +490,8 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
         hideControlsAfterDelay()
         
         // Initial appearance
-        if !viewHasAppearedInitially {
-            if startOnGrid {
-                showGrid(false)
-            }
+        if !viewHasAppearedInitially && startOnGrid {
+            showGrid(false)
         }
         
         // If rotation occured while we're presenting a modal
@@ -599,6 +579,7 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
             naviCtl.setNavigationBarHidden(false, animated: animated)
         
             let navBar = naviCtl.navigationBar
+            navBar.backgroundColor = navBarBarTintColor
             navBar.tintColor = navBarTintColor
             navBar.barTintColor = navBarBarTintColor
             navBar.shadowImage = nil
