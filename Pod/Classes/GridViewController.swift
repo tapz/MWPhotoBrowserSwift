@@ -50,7 +50,6 @@ public class GridViewController: UICollectionViewController {
 
     public override func viewWillLayoutSubviews() {
         super.viewWillLayoutSubviews()
-        performLayout()
     }
 
     public override func viewDidLayoutSubviews() {
@@ -81,18 +80,6 @@ public class GridViewController: UICollectionViewController {
             if !currentVisible {
                 collectionView!.scrollToItemAtIndexPath(currentPhotoIndexPath, atScrollPosition: UICollectionViewScrollPosition.None, animated: false)
             }
-        }
-    }
-
-    private func performLayout() {
-        if let navi = navigationController,
-            cv = collectionView
-        {
-            let navBar = navi.navigationBar
-            
-            cv.contentInset = UIEdgeInsetsMake(
-                navBar.frame.origin.y + navBar.frame.size.height + gutter,
-                0.0, 0.0, 0.0)
         }
     }
 
