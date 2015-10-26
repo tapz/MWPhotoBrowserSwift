@@ -91,6 +91,7 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
     public var enableSwipeToDismiss = true
     public var startOnGrid = false
     public var autoPlayOnAppear = false
+    public var hideControlsOnStartup = false
     public var delayToHideElements = NSTimeInterval(5.0)
     
     public var navBarTintColor = UIColor.blackColor()
@@ -487,7 +488,12 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
         setNavBarAppearance(animated)
         
         // Update UI
-        hideControlsAfterDelay()
+        if hideControlsOnStartup {
+            hideControls()
+        }
+        else {
+            hideControlsAfterDelay()
+        }
         
         // Initial appearance
         if !viewHasAppearedInitially && startOnGrid {
