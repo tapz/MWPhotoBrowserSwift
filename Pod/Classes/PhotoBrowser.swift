@@ -147,6 +147,7 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
         
         hidesBottomBarWhenPushed = true
         automaticallyAdjustsScrollViewInsets = false
+        extendedLayoutIncludesOpaqueBars = true
         
         navigationController?.view.backgroundColor = UIColor.whiteColor()
         
@@ -203,7 +204,7 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
     //MARK: - View Loading
 
     // Implement viewDidLoad to do additional setup after loading the view, typically from a nib.
-    public override func viewDidLoad() {
+    public override dynamic func viewDidLoad() {
         // Validate grid settings
         if startOnGrid {
             enableGrid = true
@@ -218,9 +219,7 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
         }
         
         // View
-        if let navi = navigationController {
-            navi.navigationBar.backgroundColor = UIColor.whiteColor()
-        }
+        navigationController?.navigationBar.backgroundColor = UIColor.whiteColor()
         
         view.backgroundColor = UIColor.whiteColor()
         view.clipsToBounds = true
@@ -444,10 +443,8 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
         }
         else {
             // We're in a navigation controller so get previous one!
-            if let navi = navigationController {
-                if navi.viewControllers.count > 1 {
-                    presenting = navi.viewControllers[navi.viewControllers.count - 2]
-                }
+            if let navi = navigationController where navi.viewControllers.count > 1 {
+                presenting = navi.viewControllers[navi.viewControllers.count - 2]
             }
         }
         
@@ -460,7 +457,7 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
 
     //MARK: - Appearance
 
-    public override func viewWillAppear(animated: Bool) {
+    public override dynamic func viewWillAppear(animated: Bool) {
         // Super
         super.viewWillAppear(animated)
         
@@ -479,10 +476,8 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
         }
         
         // Navigation bar appearance
-        if let navi = navigationController {
-            if !viewIsActive && navi.viewControllers[0] as? PhotoBrowser != self {
-                storePreviousNavBarAppearance()
-            }
+        if !viewIsActive && navigationController?.viewControllers[0] as? PhotoBrowser !== self {
+            storePreviousNavBarAppearance()
         }
         
         setNavBarAppearance(animated)
@@ -507,7 +502,7 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
         }
     }
 
-    public override func viewDidAppear(animated: Bool) {
+    public override dynamic func viewDidAppear(animated: Bool) {
         super.viewDidAppear(animated)
         viewIsActive = true
         
@@ -523,36 +518,34 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
         viewHasAppearedInitially = true
     }
 
-    public override func viewWillDisappear(animated: Bool) {
+    public override dynamic func viewWillDisappear(animated: Bool) {
         // Detect if rotation occurs while we're presenting a modal
         pageIndexBeforeRotation = currentPageIndex
         
-        if let navi = navigationController {
-            let viewControllers = navi.viewControllers 
-            
-            // Check that we're being popped for good
-            if viewControllers[0] !== self {
-                var selfFound = false
-            
-                for vc in viewControllers {
-                    if vc === self {
-                        selfFound = true
-                        break;
-                    }
-                }
-                
-                if !selfFound {
-                    // State
-                    viewIsActive = false
-                    
-                    // Bar state / appearance
-                    restorePreviousNavBarAppearance(animated)
+        // Check that we're being popped for good
+        if let viewControllers = navigationController?.viewControllers
+            where viewControllers[0] !== self
+        {
+            var selfFound = false
+        
+            for vc in viewControllers {
+                if vc === self {
+                    selfFound = true
+                    break;
                 }
             }
             
-            // Controls
-            navi.navigationBar.layer.removeAllAnimations() // Stop all animations on nav bar
+            if !selfFound {
+                // State
+                viewIsActive = false
+                
+                // Bar state / appearance
+                restorePreviousNavBarAppearance(animated)
+            }
         }
+        
+        // Controls
+        navigationController?.navigationBar.layer.removeAllAnimations() // Stop all animations on nav bar
         
         NSObject.cancelPreviousPerformRequestsWithTarget(self) // Cancel any pending toggles from taps
         setControlsHidden(false, animated: false, permanent: true)
@@ -581,10 +574,9 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
     //MARK: - Nav Bar Appearance
 
     func setNavBarAppearance(animated: Bool) {
-        if let naviCtl = navigationController {
-            naviCtl.setNavigationBarHidden(false, animated: animated)
-        
-            let navBar = naviCtl.navigationBar
+        navigationController?.setNavigationBarHidden(false, animated: animated)
+    
+        if let navBar = navigationController?.navigationBar {
             navBar.backgroundColor = navBarBarTintColor
             navBar.tintColor = navBarTintColor
             navBar.barTintColor = navBarBarTintColor
@@ -713,9 +705,7 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
         // In iOS 7 the nav bar gets shown after rotation, but might as well do this for everything!
         if areControlsHidden {
             // Force hidden
-            if let navi = navigationController {
-                navi.navigationBarHidden = true
-            }
+            navigationController?.navigationBarHidden = true
         }
     }
 
@@ -1271,8 +1261,9 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
         var yOffset = CGFloat(0.0)
         
         if !areControlsHidden {
-            let navBar = navigationController!.navigationBar
-            yOffset = navBar.frame.origin.y + navBar.frame.size.height
+            if let navBar = navigationController?.navigationBar {
+                yOffset = navBar.frame.origin.y + navBar.frame.size.height
+            }
         }
         
         let selectedButtonFrame = CGRectMake(
@@ -1589,12 +1580,17 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
         // Init grid controller
         gridController = GridViewController()
         
-        if let gc = gridController {
+        if let gc = gridController,
+            navBar = navigationController?.navigationBar
+        {
+            let bounds = view.bounds
+            let naviHeight = navBar.frame.height + UIApplication.sharedApplication().statusBarFrame.height
+            
             gc.initialContentOffset = currentGridContentOffset
             gc.browser = self
             gc.selectionMode = displaySelectionButtons
-            gc.view.frame = view.bounds
-            gc.view.frame = CGRectOffset(gc.view.frame, 0, (startOnGrid ? -1 : 1) * view.bounds.size.height)
+            gc.view.frame = CGRectMake(0.0, naviHeight, bounds.width, bounds.height - naviHeight)
+            gc.view.alpha = 0.0
             
             // Stop specific layout being triggered
             skipNextPagingScrollViewPositioning = true
@@ -1625,18 +1621,11 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
             UIView.animateWithDuration(
                 animated ? 0.3 : 0,
                 animations: {
-                    gc.view.frame = self.view.bounds
-                    
-                    let pagingFrame = self.frameForPagingScrollView
-                    self.pagingScrollView.frame = CGRectOffset(
-                        pagingFrame,
-                        0,
-                        (self.startOnGrid ? 1 : -1) * pagingFrame.size.height)
+                    gc.view.alpha = 1.0
+                    self.pagingScrollView.alpha = 0.0
                 },
                 completion: { finished in
-                    if let grid = self.gridController {
-                        grid.didMoveToParentViewController(self)
-                    }
+                    gc.didMoveToParentViewController(self)
                 })
         }
     }
@@ -1658,25 +1647,28 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
                 0,
                 (self.startOnGrid ? 1 : -1) * pagingFrame.size.height)
             
-            // Remember and remove controller falsew so things can detect a nil grid controller
-            let tmpGridController = gc
+            // Remember and remove controller now so things can detect a nil grid controller
             gridController = nil
             
             // Update
             updateNavigation()
             updateVisiblePageStates()
+            view.layoutIfNeeded()
+            view.layoutSubviews()
+            
+            self.pagingScrollView.frame = self.frameForPagingScrollView
             
             // Animate, hide grid and show paging scroll view
             UIView.animateWithDuration(
                 0.3,
                 animations: {
-                    tmpGridController.view.frame = CGRectOffset(self.view.bounds, 0, (self.startOnGrid ? -1 : 1) * self.view.bounds.size.height)
-                    self.pagingScrollView.frame = self.frameForPagingScrollView
+                    gc.view.alpha = 0.0
+                    self.pagingScrollView.alpha = 1.0
                 },
                 completion: { finished in
-                    tmpGridController.willMoveToParentViewController(nil)
-                    tmpGridController.view.removeFromSuperview()
-                    tmpGridController.removeFromParentViewController()
+                    gc.willMoveToParentViewController(nil)
+                    gc.view.removeFromSuperview()
+                    gc.removeFromParentViewController()
             
                     self.setControlsHidden(false, animated: true, permanent: false) // retrigger timer
                 })
@@ -1686,7 +1678,6 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
     //MARK: - Control Hiding / Showing
 
     // If permanent then we don't set timers to hide again
-    // Fades all controls on iOS 5 & 6, and iOS 7 controls slide and fade
     func setControlsHidden(var hidden: Bool, animated: Bool, permanent: Bool) {
         // Force visible
         if 0 == numberOfPhotos || gridController != nil || alwaysShowControls {
@@ -1739,9 +1730,7 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
         }
         
         UIView.animateWithDuration(animationDuration, animations: {
-            if let navi = self.navigationController {
-                navi.setNavigationBarHidden(hidden, animated: true)
-            }
+            self.navigationController?.setNavigationBarHidden(hidden, animated: true)
             
             // Toolbar
             self.toolbar.frame = self.frameForToolbar
@@ -1751,10 +1740,7 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
                 self.view.backgroundColor = UIColor.blackColor()
                 
                 self.pagingScrollView.backgroundColor = UIColor.blackColor()
-                
-                if let navi = self.navigationController {
-                    navi.view.backgroundColor = UIColor.blackColor()
-                }
+                self.navigationController?.view.backgroundColor = UIColor.blackColor()
                 
                 for page in self.visiblePages {
                     page.backgroundColor = UIColor.blackColor()
@@ -1764,10 +1750,7 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
                 self.view.backgroundColor = UIColor.whiteColor()
                 
                 self.pagingScrollView.backgroundColor = UIColor.whiteColor()
-                
-                if let navi = self.navigationController {
-                    navi.view.backgroundColor = UIColor.whiteColor()
-                }
+                self.navigationController?.view.backgroundColor = UIColor.whiteColor()
                 
                 for page in self.visiblePages {
                     page.backgroundColor = UIColor.whiteColor()
@@ -1803,9 +1786,7 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
             }
         })
         
-        // Control hiding timer
-        // Will cancel existing timer but only begin hiding if
-        // they are visible
+        // Controls
         if !permanent {
             hideControlsAfterDelay()
         }
@@ -1990,17 +1971,13 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
         progressHUD.mode = MBProgressHUDMode.Indeterminate
         progressHUD.show(true)
         
-        if let navi = navigationController {
-            navi.navigationBar.userInteractionEnabled = false
-        }
+        navigationController?.navigationBar.userInteractionEnabled = false
     }
 
     private func hideProgressHUD(animated: Bool) {
         progressHUD.hide(animated)
         
-        if let navi = navigationController {
-            navi.navigationBar.userInteractionEnabled = true
-        }
+        navigationController?.navigationBar.userInteractionEnabled = true
     }
 
     private func showProgressHUDCompleteMessage(message: String?) {
@@ -2017,9 +1994,7 @@ public class PhotoBrowser: UIViewController, UIScrollViewDelegate, UIActionSheet
             progressHUD.hide(true)
         }
     
-        if let navi = navigationController {
-            navi.navigationBar.userInteractionEnabled = true
-        }
+        navigationController?.navigationBar.userInteractionEnabled = true
     }
 }
 
