@@ -11,7 +11,7 @@ import UIKit
 public class GridViewController: UICollectionViewController {
     weak var browser: PhotoBrowser?
     var selectionMode = false
-    var initialContentOffset = CGPointMake(0.0, CGFloat.max)
+    var initialContentOffset = CGPoint(x: 0.0, y: CGFloat.greatestFiniteMagnitude)
     
     init() {
         super.init(collectionViewLayout: UICollectionViewFlowLayout())
@@ -27,16 +27,16 @@ public class GridViewController: UICollectionViewController {
         super.viewDidLoad()
         
         if let cv = collectionView {
-            cv.registerClass(GridCell.self, forCellWithReuseIdentifier: "GridCell")
+            cv.register(GridCell.self, forCellWithReuseIdentifier: "GridCell")
             cv.alwaysBounceVertical = true
-            cv.backgroundColor = UIColor.whiteColor()
+            cv.backgroundColor = UIColor.white
         }
     }
 
-    public override func viewWillDisappear(animated: Bool) {
+    public override func viewWillDisappear(_ animated: Bool) {
         // Cancel outstanding loading
         if let cv = collectionView {
-            for cell in cv.visibleCells() {
+            for cell in cv.visibleCells {
                 let c = cell as! GridCell
                 
                 if let p = c.photo {
@@ -58,15 +58,15 @@ public class GridViewController: UICollectionViewController {
 
     func adjustOffsetsAsRequired() {
         // Move to previous content offset
-        if initialContentOffset.y != CGFloat.max {
+        if initialContentOffset.y != CGFloat.greatestFiniteMagnitude {
             collectionView!.contentOffset = initialContentOffset
             collectionView!.layoutIfNeeded() // Layout after content offset change
         }
         
         // Check if current item is visible and if not, make it so!
-        if let b = browser where b.numberOfPhotos > 0 {
-            let currentPhotoIndexPath = NSIndexPath(forItem: b.currentIndex, inSection: 0)
-            let visibleIndexPaths = collectionView!.indexPathsForVisibleItems()
+        if let b = browser , b.numberOfPhotos > 0 {
+            let currentPhotoIndexPath = IndexPath(item: b.currentIndex,section: 0)
+            let visibleIndexPaths = collectionView!.indexPathsForVisibleItems
             
             var currentVisible = false
             
@@ -78,7 +78,7 @@ public class GridViewController: UICollectionViewController {
             }
             
             if !currentVisible {
-                collectionView!.scrollToItemAtIndexPath(currentPhotoIndexPath, atScrollPosition: UICollectionViewScrollPosition.None, animated: false)
+                collectionView!.scrollToItem(at: currentPhotoIndexPath, at: UICollectionView.ScrollPosition.centeredVertically, animated: false)
             }
         }
     }
@@ -86,25 +86,25 @@ public class GridViewController: UICollectionViewController {
     //MARK: - Layout
 
     private var columns: CGFloat {
-        return floorcgf(view.bounds.width / 93.0)
+        return floorcgf(x: view.bounds.width / 93.0)
     }
 
     private var margin = CGFloat(5.0)
     private var gutter = CGFloat(5.0)
     
-    public override func viewWillTransitionToSize(size: CGSize, withTransitionCoordinator coordinator: UIViewControllerTransitionCoordinator) {
-        coordinator.animateAlongsideTransition(nil) { _ in
+    public override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+        coordinator.animate(alongsideTransition: nil) { _ in
             if let cv = self.collectionView {
                 cv.reloadData()
             }
         }
         
-        super.viewWillTransitionToSize(size, withTransitionCoordinator: coordinator)
+        super.viewWillTransition(to: size, with: coordinator)
     }
-
+   
     //MARK: - Collection View
 
-    public override func collectionView(view: UICollectionView, numberOfItemsInSection section: Int) -> NSInteger {
+    public override func collectionView(_ view: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         if let b = browser {
             return b.numberOfPhotos
         }
@@ -112,19 +112,20 @@ public class GridViewController: UICollectionViewController {
         return 0
     }
 
-    public override func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCellWithReuseIdentifier("GridCell", forIndexPath: indexPath) as! GridCell
+    
+    public override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "GridCell", for: indexPath) as! GridCell
         
         if let b = browser,
-            photo = b.thumbPhotoAtIndex(indexPath.row)
+            let photo = b.thumbPhotoAtIndex(index: indexPath.row)
         {
             cell.photo = photo
             cell.gridController = self
             cell.selectionMode = selectionMode
             cell.index = indexPath.row
-            cell.selected = b.photoIsSelectedAtIndex(indexPath.row)
+            cell.isSelected = b.photoIsSelectedAtIndex(index: indexPath.row)
         
-            if let _ = b.imageForPhoto(photo) {
+            if let _ = b.imageForPhoto(photo: photo) {
                 cell.displayImage()
             }
             else {
@@ -134,26 +135,27 @@ public class GridViewController: UICollectionViewController {
         
         return cell
     }
-
-    public override func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
+    public override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         if let b = browser {
             b.currentPhotoIndex = indexPath.row
             b.hideGrid()
         }
     }
-
-    public override func collectionView(collectionView: UICollectionView, didEndDisplayingCell cell: UICollectionViewCell, forItemAtIndexPath indexPath: NSIndexPath) {
+    
+    public override func collectionView(_ collectionView: UICollectionView, didEndDisplaying cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
         if let gridCell = cell as? GridCell {
             if let gcp = gridCell.photo {
                 gcp.cancelAnyLoading()
             }
         }
     }
-
-    func collectionView(collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAtIndexPath indexPath: NSIndexPath) -> CGSize {
+    
+    
+    
+    func collectionView(collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAtIndexPath indexPath: IndexPath) -> CGSize {
         let value = CGFloat(floorf(Float((view.bounds.size.width - (columns - 1.0) * gutter - 2.0 * margin) / columns)))
         
-        return CGSizeMake(value, value)
+        return CGSize(width: value, height: value)
     }
 
     func collectionView(collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumInteritemSpacingForSectionAtIndex section: Int) -> CGFloat {
@@ -166,6 +168,6 @@ public class GridViewController: UICollectionViewController {
 
     func collectionView(collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAtIndex section: Int) -> UIEdgeInsets {
         let margin = self.margin
-        return UIEdgeInsetsMake(margin, margin, margin, margin)
+        return UIEdgeInsets(top: margin, left: margin, bottom: margin, right: margin)
     }
 }
