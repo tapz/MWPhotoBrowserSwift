@@ -16,16 +16,17 @@ import Photos
 var PHInvalidImageRequestID = PHImageRequestID(0)
 
 public class MWPhoto: Photo {
+  
     public var caption = ""
     public var emptyImage = true
     public var isVideo = false
     public var underlyingImage: UIImage?
 
-    private let uuid = NSUUID().UUIDString
+    private let uuid = NSUUID().uuidString
     private var image: UIImage?
     private var photoURL: NSURL?
     private var asset: PHAsset?
-    private var assetTargetSize = CGSizeMake(0.0, 0.0)
+    private var assetTargetSize = CGSize(width: 0.0, height: 0.0)
     
     private var loadingInProgress = false
     private var operation: ImageDownloadOperation?
@@ -38,6 +39,7 @@ public class MWPhoto: Photo {
     public convenience init(image: UIImage) {
         self.init()
         self.image = image
+        
     }
     
     public convenience init(url: NSURL, caption: String) {
@@ -56,10 +58,10 @@ public class MWPhoto: Photo {
         
         self.asset = asset
         assetTargetSize = targetSize
-        isVideo = asset.mediaType == PHAssetMediaType.Video
+        isVideo = asset.mediaType == PHAssetMediaType.video
     }
 
-    public convenience init(videoURL: NSURL) {
+    public convenience init(videoURL: URL) {
         self.init()
     
         self.videoURL = videoURL
@@ -69,29 +71,29 @@ public class MWPhoto: Photo {
 
     //MARK: - Video
 
-    private var videoURL: NSURL?
+    private var videoURL: URL?
 
-    public func setVideoURL(url: NSURL?) {
+    public func setVideoURL(url: URL?) {
         videoURL = url
         isVideo = true
     }
 
-    public func getVideoURL(completion: (NSURL?) -> ()) {
+    public func getVideoURL(completion: @escaping(URL?) -> ()) {
         if let vurl = videoURL {
             completion(vurl)
         }
         else
         if let a = asset {
-            if a.mediaType == PHAssetMediaType.Video {
+            if a.mediaType == PHAssetMediaType.video {
                 let options = PHVideoRequestOptions()
-                options.networkAccessAllowed = true
+                options.isNetworkAccessAllowed = true
                 
-                PHImageManager.defaultManager().requestAVAssetForVideo(
-                    a,
+                PHImageManager.default().requestAVAsset(
+                    forVideo: a,
                     options: options,
                     resultHandler: { asset, audioMix, info in
                         if let urlAsset = asset as? AVURLAsset {
-                            completion(urlAsset.URL)
+                            completion(urlAsset.url)
                         }
                         else {
                             completion(nil)
@@ -106,7 +108,7 @@ public class MWPhoto: Photo {
     //MARK: - Photo Protocol Methods
 
     public func loadUnderlyingImageAndNotify() {
-        assert(NSThread.currentThread().isMainThread, "This method must be called on the main thread.")
+        assert(Thread.current.isMainThread, "This method must be called on the main thread.")
         
         if loadingInProgress {
             return
@@ -140,24 +142,24 @@ public class MWPhoto: Photo {
         else
         if let purl = photoURL {
             // Check what type of url it is
-            if purl.scheme.lowercaseString == "assets-library" {
+            if purl.scheme?.lowercased() == "assets-library" {
                 // Load from assets library
-                performLoadUnderlyingImageAndNotifyWithAssetsLibraryURL(purl)
+                performLoadUnderlyingImageAndNotifyWithAssetsLibraryURL(url: purl)
             }
             else
             if purl.isFileReferenceURL() {
                 // Load from local file async
-                performLoadUnderlyingImageAndNotifyWithLocalFileURL(purl)
+                performLoadUnderlyingImageAndNotifyWithLocalFileURL(url: purl)
             }
             else {
                 // Load async from web (using SDWebImage)
-                performLoadUnderlyingImageAndNotifyWithWebURL(purl)
+                performLoadUnderlyingImageAndNotifyWithWebURL(url: purl)
             }
         }
         else
         if let a = asset {
             // Load from photos asset
-            performLoadUnderlyingImageAndNotifyWithAsset(a, targetSize: assetTargetSize)
+            performLoadUnderlyingImageAndNotifyWithAsset(asset: a, targetSize: assetTargetSize)
         }
         else {
             // Image is empty
@@ -176,7 +178,7 @@ public class MWPhoto: Photo {
         /*
             progress: { receivedSize, expectedSize in
                 if expectedSize > 0 {
-                    NSNotificationCenter.defaultCenter().postNotificationName(
+                    NotificationCenter.default.postNotificationName(
                         MWPHOTO_PROGRESS_NOTIFICATION,
                         object: [
                             "progress": Float(receivedSize) / Float(expectedSize),
@@ -186,10 +188,12 @@ public class MWPhoto: Photo {
             },
         */
         
-        operation = ImageManager.sharedManager.downloadImageAtURL(url, cacheScaled: false, imageView: nil)
+        
+        
+        operation = ImageManager.sharedManager.downloadImageAtURL(url: url as URL, cacheScaled: false, imageView: nil)
         { [weak self] imageInstance, error in
             if let strongSelf = self {
-                dispatch_async(dispatch_get_main_queue()) {
+                /*dispatch_async(dispatch_get_main_queue()) {
                     strongSelf.operation = nil
                     
                     if let ii = imageInstance {
@@ -199,6 +203,17 @@ public class MWPhoto: Photo {
                     dispatch_async(dispatch_get_main_queue()) {
                         strongSelf.imageLoadingComplete()
                     }
+                }*/
+                
+                DispatchQueue.main.async {
+                    strongSelf.operation = nil
+                    
+                    if let ii = imageInstance {
+                        strongSelf.underlyingImage = ii.image
+                    }
+                    DispatchQueue.main.async {
+                        strongSelf.imageLoadingComplete()
+                    }
                 }
             }
         }
@@ -206,7 +221,7 @@ public class MWPhoto: Photo {
 
     // Load from local file
     private func performLoadUnderlyingImageAndNotifyWithLocalFileURL(url: NSURL) {
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)) {
+        /*dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)) {
             //try {
             if let path = url.path {
                 self.underlyingImage = UIImage(contentsOfFile: path)
@@ -220,12 +235,21 @@ public class MWPhoto: Photo {
                 }
             //}
             }
+        }*/
+        
+        DispatchQueue.global(qos: .userInitiated).async {
+            if let path = url.path {
+                self.underlyingImage = UIImage(contentsOfFile: path)
+                DispatchQueue.main.async {
+                     self.imageLoadingComplete()
+                }
+            }
         }
     }
 
     // Load from asset library async
     private func performLoadUnderlyingImageAndNotifyWithAssetsLibraryURL(url: NSURL) {
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)) {
+       /* dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)) {
             //try {
                 let assetslibrary = ALAssetsLibrary()
                 assetslibrary.assetForURL(
@@ -251,37 +275,58 @@ public class MWPhoto: Photo {
             //    MWLog(@"Photo from asset library error: \(e)")
             //    self.performSelectorOnMainThread(Selector("imageLoadingComplete"), withObject: nil, waitUntilDone: false)
             //}
+        }*/
+        DispatchQueue.global(qos: .userInitiated).async {
+            let assetslibrary = ALAssetsLibrary()
+            assetslibrary.asset(
+                for: url as URL,
+                resultBlock: { asset in
+                    let rep = asset?.defaultRepresentation()
+                    self.underlyingImage = UIImage(cgImage: (rep?.fullScreenImage().takeUnretainedValue())!)
+                    DispatchQueue.main.async {
+                        self.imageLoadingComplete()
+                    }
+                    
+                },
+                failureBlock: { error in
+                    self.underlyingImage = nil
+                    //MWLog(@"Photo from asset library error: %@",error)
+                    DispatchQueue.main.async {
+                        self.imageLoadingComplete()
+
+                    }
+                })
         }
     }
 
     // Load from photos library
     private func performLoadUnderlyingImageAndNotifyWithAsset(asset: PHAsset, targetSize: CGSize) {
-        let imageManager = PHImageManager.defaultManager()
+        let imageManager = PHImageManager.default()
         
         let options = PHImageRequestOptions()
-        options.networkAccessAllowed = true
-        options.resizeMode = .Fast
-        options.deliveryMode = .HighQualityFormat
-        options.synchronous = false
+        options.isNetworkAccessAllowed = true
+        options.resizeMode = .fast
+        options.deliveryMode = .highQualityFormat
+        options.isSynchronous = false
         options.progressHandler = { progress, error, stop, info in
             let dict = [
                 "progress" : progress,
                 "photo" : self
-            ]
-            
-            NSNotificationCenter.defaultCenter().postNotificationName(MWPHOTO_PROGRESS_NOTIFICATION, object: dict)
+                ] as [String : Any]
+            NotificationCenter.default.post(name: Notification.Name(rawValue: MWPHOTO_PROGRESS_NOTIFICATION), object: dict)
         }
         
-        assetRequestID = imageManager.requestImageForAsset(
-            asset,
+        assetRequestID = imageManager.requestImage(
+            for: asset,
             targetSize: targetSize,
-            contentMode: PHImageContentMode.AspectFit,
+            contentMode: PHImageContentMode.aspectFit,
             options: options,
                 resultHandler: { result, info in
-                dispatch_async(dispatch_get_main_queue()) {
-                    self.underlyingImage = result
-                    self.imageLoadingComplete()
-                }
+                    DispatchQueue.main.async {
+                        self.underlyingImage = result
+                        self.imageLoadingComplete()
+                    }
+        
             })
     }
 
@@ -292,21 +337,21 @@ public class MWPhoto: Photo {
     }
 
     private func imageLoadingComplete() {
-        assert(NSThread.currentThread().isMainThread, "This method must be called on the main thread.")
+        assert(Thread.current.isMainThread, "This method must be called on the main thread.")
         
         // Complete so notify
         loadingInProgress = false
         
         // Notify on next run loop
-        dispatch_async(dispatch_get_main_queue()) {
+        DispatchQueue.main.async {
             self.postCompleteNotification()
+
         }
+       
     }
 
     private func postCompleteNotification() {
-        NSNotificationCenter.defaultCenter().postNotificationName(
-            MWPHOTO_LOADING_DID_END_NOTIFICATION,
-            object: self)
+        NotificationCenter.default.post(name:Notification.Name(rawValue: MWPHOTO_LOADING_DID_END_NOTIFICATION), object: self)
     }
 
     public func cancelAnyLoading() {
@@ -316,7 +361,7 @@ public class MWPhoto: Photo {
         }
         else
         if assetRequestID != PHInvalidImageRequestID {
-            PHImageManager.defaultManager().cancelImageRequest(assetRequestID)
+            PHImageManager.default().cancelImageRequest(assetRequestID)
             assetRequestID = PHInvalidImageRequestID
         }
     }

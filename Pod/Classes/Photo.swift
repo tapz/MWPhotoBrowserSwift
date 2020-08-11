@@ -25,7 +25,7 @@ public protocol Photo: class {
     // See MWPhoto object for an example implementation.
     // When the underlying UIImage is loaded (or failed to load) you should post the following
     // notification:
-    // NSNotificationCenter.defaultCenter().postNotificationName(MWPHOTO_LOADING_DID_END_NOTIFICATION
+    // NotificationCenter.default.postNotificationName(MWPHOTO_LOADING_DID_END_NOTIFICATION
     //                                                     object: self)
     func performLoadUnderlyingImageAndNotify()
 
@@ -40,8 +40,8 @@ public protocol Photo: class {
 
     // Video
     var isVideo: Bool { get }
-    func setVideoURL(url: NSURL?)
-    func getVideoURL(completion: (NSURL?) -> ())
+    func setVideoURL(url: URL?)
+    func getVideoURL(completion: @escaping(URL?) -> ())
 
     // Return a caption string to be displayed over the image
     // Return nil to display no caption

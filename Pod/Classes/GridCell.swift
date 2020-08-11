@@ -18,8 +18,8 @@ public class GridCell: UICollectionViewCell {
     private let imageView = UIImageView()
     private let videoIndicator = UIImageView()
     private var loadingError: UIImageView?
-	private let loadingIndicator = DACircularProgressView(frame: CGRectMake(0, 0, 40.0, 40.0))
-    private let selectedButton = UIButton(type: .Custom)
+    private let loadingIndicator = DACircularProgressView(frame: CGRect(x: 0, y: 0, width: 40.0, height: 40.0))
+    private let selectedButton = UIButton(type: .custom)
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -29,69 +29,69 @@ public class GridCell: UICollectionViewCell {
         
         // Image
         imageView.frame = self.bounds
-        imageView.contentMode = .ScaleAspectFill
+        imageView.contentMode = .scaleAspectFill
         imageView.clipsToBounds = true
-        imageView.autoresizingMask = [.FlexibleHeight, .FlexibleWidth]
+        imageView.autoresizingMask = [.flexibleHeight, .flexibleWidth]
         imageView.autoresizesSubviews = true
         
         addSubview(imageView)
         
         // Video Image
-        videoIndicator.hidden = false
+        videoIndicator.isHidden = false
         let videoIndicatorImage = UIImage.imageForResourcePath(
-            "MWPhotoBrowserSwift.bundle/VideoOverlay",
+            path: "MWPhotoBrowserSwift.bundle/VideoOverlay",
             ofType: "png",
-            inBundle: NSBundle(forClass: GridCell.self))!
+            inBundle: Bundle(for: GridCell.self))!
             
-        videoIndicator.frame = CGRectMake(
-            self.bounds.size.width - videoIndicatorImage.size.width - videoIndicatorPadding,
-            self.bounds.size.height - videoIndicatorImage.size.height - videoIndicatorPadding,
-            videoIndicatorImage.size.width, videoIndicatorImage.size.height)
+        videoIndicator.frame = CGRect(
+            x: self.bounds.size.width - videoIndicatorImage.size.width - videoIndicatorPadding,
+            y: self.bounds.size.height - videoIndicatorImage.size.height - videoIndicatorPadding,
+            width: videoIndicatorImage.size.width, height: videoIndicatorImage.size.height)
         
         videoIndicator.image = videoIndicatorImage
-        videoIndicator.autoresizingMask = [.FlexibleHeight, .FlexibleWidth]
+        videoIndicator.autoresizingMask = [.flexibleHeight, .flexibleWidth]
         videoIndicator.autoresizesSubviews = true
         addSubview(videoIndicator)
         
         // Selection button
-        selectedButton.contentMode = UIViewContentMode.TopRight
+        selectedButton.contentMode = UIView.ContentMode.topRight
         selectedButton.adjustsImageWhenHighlighted = false
 
         selectedButton.setImage(
             UIImage.imageForResourcePath(
-                "MWPhotoBrowserSwift.bundle/ImageSelectedSmallOff",
+                path: "MWPhotoBrowserSwift.bundle/ImageSelectedSmallOff",
                 ofType: "png",
-                inBundle: NSBundle(forClass: GridCell.self)),
-            forState: .Normal)
+                inBundle: Bundle(for: GridCell.self)),
+            for: .normal)
 
         selectedButton.setImage(UIImage.imageForResourcePath(
-                "MWPhotoBrowserSwift.bundle/ImageSelectedSmallOn",
-                ofType: "png",
-                inBundle: NSBundle(forClass: GridCell.self)),
-            forState: .Selected)
+            path: "MWPhotoBrowserSwift.bundle/ImageSelectedSmallOn",
+            ofType: "png",
+            inBundle: Bundle(for: GridCell.self)),
+                                for: .selected)
 
-        selectedButton.addTarget(self, action: Selector("selectionButtonPressed"), forControlEvents: .TouchDown)
-        selectedButton.hidden = true
-        selectedButton.frame = CGRectMake(0, 0, 44, 44)
+        selectedButton.addTarget(self, action: #selector(self.selectionButtonPressed), for: .touchDown)
+        selectedButton.isHidden = true
+        selectedButton.frame = CGRect(x: 0, y: 0, width: 44, height: 44)
         addSubview(selectedButton)
     
         // Loading indicator
-        loadingIndicator.userInteractionEnabled = false
+        loadingIndicator.isUserInteractionEnabled = false
         loadingIndicator.thicknessRatio = 0.1
         loadingIndicator.roundedCorners = 0
         addSubview(loadingIndicator)
         
         // Listen for photo loading notifications
-        NSNotificationCenter.defaultCenter().addObserver(
+        NotificationCenter.default.addObserver(
             self,
-            selector: Selector("setProgressFromNotification:"),
-            name: MWPHOTO_PROGRESS_NOTIFICATION,
+            selector: #selector(self.setProgressFromNotification(notification:)),
+            name: Notification.Name(rawValue: MWPHOTO_PROGRESS_NOTIFICATION),
             object: nil)
         
-        NSNotificationCenter.defaultCenter().addObserver(
+        NotificationCenter.default.addObserver(
             self,
-            selector: Selector("handlePhotoLoadingDidEndNotification:"),
-            name: MWPHOTO_LOADING_DID_END_NOTIFICATION,
+            selector: #selector(self.handlePhotoLoadingDidEndNotification(notification:)),
+            name: Notification.Name(rawValue: MWPHOTO_LOADING_DID_END_NOTIFICATION),
             object: nil)
     }
 
@@ -100,7 +100,7 @@ public class GridCell: UICollectionViewCell {
     }
 
     deinit {
-        NSNotificationCenter.defaultCenter().removeObserver(self)
+        NotificationCenter.default.removeObserver(self)
     }
 
     private weak var mwGridController: GridViewController?
@@ -112,8 +112,8 @@ public class GridCell: UICollectionViewCell {
             if let gc = gridCtl {
                 // Set custom selection image if required
                 if let browser = gc.browser {
-                    if browser.customImageSelectedSmallIconName.characters.count > 0 {
-                        selectedButton.setImage(UIImage(named: browser.customImageSelectedSmallIconName), forState: .Selected)
+                    if browser.customImageSelectedSmallIconName.count > 0 {
+                        selectedButton.setImage(UIImage(named: browser.customImageSelectedSmallIconName), for: .selected)
                     }
                 }
             }
@@ -131,17 +131,17 @@ public class GridCell: UICollectionViewCell {
         
         imageView.frame = bounds
         
-        loadingIndicator.frame = CGRectMake(
-            CGFloat(floorf(Float(bounds.size.width - loadingIndicator.frame.size.width) / 2.0)),
-            CGFloat(floorf(Float(bounds.size.height - loadingIndicator.frame.size.height) / 2.0)),
-            loadingIndicator.frame.size.width,
-            loadingIndicator.frame.size.height)
+        loadingIndicator.frame = CGRect(
+            x: CGFloat(floorf(Float(bounds.size.width - loadingIndicator.frame.size.width) / 2.0)),
+            y: CGFloat(floorf(Float(bounds.size.height - loadingIndicator.frame.size.height) / 2.0)),
+            width: loadingIndicator.frame.size.width,
+            height: loadingIndicator.frame.size.height)
             
-        selectedButton.frame = CGRectMake(
-            bounds.size.width - selectedButton.frame.size.width,
-            0.0,
-            selectedButton.frame.size.width,
-            selectedButton.frame.size.height)
+        selectedButton.frame = CGRect(
+            x: bounds.size.width - selectedButton.frame.size.width,
+            y: 0.0,
+            width: selectedButton.frame.size.width,
+            height: selectedButton.frame.size.height)
     }
 
     //MARK: - Cell
@@ -151,7 +151,7 @@ public class GridCell: UICollectionViewCell {
         mwGridController = nil
         imageView.image = nil
         loadingIndicator.progress = 0
-        selectedButton.hidden = true
+        selectedButton.isHidden = true
         hideImageFailure()
         
         super.prepareForReuse()
@@ -166,7 +166,7 @@ public class GridCell: UICollectionViewCell {
             mwPhoto = p
             
             if let ph = p {
-                videoIndicator.hidden = !ph.isVideo
+                videoIndicator.isHidden = !ph.isVideo
                 
                 if nil == ph.underlyingImage {
                     showLoadingIndicator()
@@ -188,75 +188,76 @@ public class GridCell: UICollectionViewCell {
     func displayImage() {
         if let p = mwPhoto {
             imageView.image = p.underlyingImage
-            selectedButton.hidden = !selectionMode
+            selectedButton.isHidden = !selectionMode
             self.hideImageFailure()
         }
     }
 
     //MARK: - Selection
 
-    public override var selected: Bool {
+    public override var isSelected: Bool {
         set(sel) {
-            super.selected = sel
-            selectedButton.selected = sel
+            super.isSelected = sel
+            selectedButton.isSelected = sel
         }
         
         get {
-            return super.selected
+            return super.isSelected
         }
     }
 
-    func selectionButtonPressed() {
-        selectedButton.selected = !selectedButton.selected
+    @objc func selectionButtonPressed() {
+        selectedButton.isSelected = !selectedButton.isSelected
         
         if let gc = gridController {
             if let browser = gc.browser {
-                browser.setPhotoSelected(selectedButton.selected, atIndex: index)
+                browser.setPhotoSelected(selected: selectedButton.isSelected, atIndex: index)
             }
         }
     }
 
     //MARK: - Touches
 
-    public override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
+    public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         imageView.alpha = 0.6
-        super.touchesBegan(touches, withEvent: event)
+        super.touchesBegan(touches, with: event)
     }
 
-    public override func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent?) {
+    public override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         imageView.alpha = 1
-        super.touchesEnded(touches, withEvent: event)
+        super.touchesEnded(touches, with: event)
     }
 
-    public override func touchesCancelled(touches: Set<UITouch>?, withEvent event: UIEvent?) {
+    public override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
         imageView.alpha = 1
-        super.touchesCancelled(touches, withEvent: event)
+        super.touchesCancelled(touches, with: event)
     }
+    
 
     //MARK: - Indicators
 
     private func hideLoadingIndicator() {
-        loadingIndicator.hidden = true
+        loadingIndicator.isHidden = true
     }
 
     private func showLoadingIndicator() {
         loadingIndicator.progress = 0
-        loadingIndicator.hidden = false
+        loadingIndicator.isHidden = false
         
         hideImageFailure()
     }
 
     private func showImageFailure() {
         // Only show if image is not empty
-        if let p = photo where p.emptyImage {
+        if let p = photo, p.emptyImage {
             if nil == loadingError {
                 let error = UIImageView()
                 error.image = UIImage.imageForResourcePath(
-                    "MWPhotoBrowserSwift.bundle/ImageError",
+                    path: "MWPhotoBrowserSwift.bundle/ImageError",
                     ofType: "png",
-                    inBundle: NSBundle(forClass: GridCell.self))
+                    inBundle: Bundle(for: GridCell.self))
         
-                error.userInteractionEnabled = false
+                error.isUserInteractionEnabled = false
                 error.sizeToFit()
             
                 addSubview(error)
@@ -264,11 +265,11 @@ public class GridCell: UICollectionViewCell {
             }
             
             if let e = loadingError {
-                e.frame = CGRectMake(
-                    CGFloat(floorf(Float(bounds.size.width - e.frame.size.width) / 2.0)),
-                    CGFloat(floorf(Float(bounds.size.height - e.frame.size.height) / 2.0)),
-                    e.frame.size.width,
-                    e.frame.size.height)
+                e.frame = CGRect(
+                    x: CGFloat(floorf(Float(bounds.size.width - e.frame.size.width) / 2.0)),
+                    y: CGFloat(floorf(Float(bounds.size.height - e.frame.size.height) / 2.0)),
+                    width: e.frame.size.width,
+                    height: e.frame.size.height)
             }
         }
         
@@ -285,15 +286,15 @@ public class GridCell: UICollectionViewCell {
 
     //MARK: - Notifications
 
-    public func setProgressFromNotification(notification: NSNotification) {
-        if let dict = notification.object as? [String : AnyObject?],
-            photoWithProgress = dict["photo"] as? Photo,
-            mwp = mwPhoto where photosEqual(photoWithProgress, mwp)
+    @objc public func setProgressFromNotification(notification: Notification) {
+        if let dict = notification.object as? [String : Any?],
+            let photoWithProgress = dict["photo"] as? Photo,
+            let mwp = mwPhoto, photosEqual(p1: photoWithProgress, mwp)
         {
             if let progress = dict["progress"] as? String,
-                progressVal =  NSNumberFormatter().numberFromString(progress)
+                let progressVal =  NumberFormatter().number(from: progress)
             {
-                dispatch_async(dispatch_get_main_queue()) {
+                DispatchQueue.main.async {
                     self.loadingIndicator.progress = CGFloat(max(min(1.0, progressVal.floatValue), 1.0))
                     return
                 }
@@ -301,9 +302,9 @@ public class GridCell: UICollectionViewCell {
         }
     }
 
-    public func handlePhotoLoadingDidEndNotification(notification: NSNotification) {
+    @objc public func handlePhotoLoadingDidEndNotification(notification: Notification) {
         if let p = notification.object as? Photo,
-            mwp = mwPhoto where photosEqual(p, mwp)
+            let mwp = mwPhoto, photosEqual(p1: p, mwp)
         {
             if p.underlyingImage != nil {
                 // Successful load
